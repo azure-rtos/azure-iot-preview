@@ -1,0 +1,9 @@
+[submodule "samples/lib/netxduo"]
+	path = samples/lib/netxduo
+	url = git@github.com:azure-rtos/netxduo.git
+[submodule "samples/lib/threadx"]
+	path = samples/lib/threadx
+	url = git@github.com:azure-rtos/threadx.git
+[submodule "azure_iot/azure-sdk-for-c"]
+	path = azure_iot/azure-sdk-for-c
+	url = https://github.com/Azure/azure-sdk-for-c.git
