@@ -36,11 +36,11 @@ Remove-Item -Recurse -Force "$BUILDDIR\*.*"
 # set(CMAKE_ASM_FLAGS "${WIN32_FLAGS} -x assembler-with-cpp" CACHE INTERNAL "asm compiler flags")
 # set(CMAKE_EXE_LINKER_FLAGS "${WIN32_FLAGS} ${LD_FLAGS} -Wl,--gc-sections" CACHE INTERNAL "exe link flags")
 
-$Win32Flags = "-DTX_WIN32_DEBUG_ENABLE -DNDEBUG -D_CONSOLE -D_LIB"
-cmake -B"$BUILDDIR" -GNinja -DTHREADX_ARCH="win32" -DTHREADX_TOOLCHAIN="gnu" -DCMAKE_C_FLAGS="$win32Flags" -DCMAKE_ASM_FLAGS="$win32Flags" -DCMAKE_EXE_LINKER_FLAGS="$win32Flags" "$BASEDIR"
+# $Win32Flags = "-DTX_WIN32_DEBUG_ENABLE -DNDEBUG -D_CONSOLE -D_LIB"
+# cmake -B"$BUILDDIR" -GNinja -DTHREADX_ARCH="win32" -DTHREADX_TOOLCHAIN="gnu" -DCMAKE_C_FLAGS="$win32Flags" -DCMAKE_ASM_FLAGS="$win32Flags" -DCMAKE_EXE_LINKER_FLAGS="$win32Flags" "$BASEDIR"
 
 # Generate the build system using the system default
-# cmake -B"$BUILDDIR" -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN_FILE $BASEDIR
+cmake -B"$BUILDDIR" -GNinja -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE" $BASEDIR
 
 # And then do the build
 cmake --build $BUILDDIR

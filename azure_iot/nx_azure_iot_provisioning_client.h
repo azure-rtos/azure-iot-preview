@@ -9,13 +9,15 @@
 /*                                                                        */
 /**************************************************************************/
 
+/* Version: 6.0 Preview */
+
 /**
  * @file nx_azure_iot_provisioning_client.h
  *
  * @brief Definition for the Azure Device Provisioning client.
  * @remark The Device Provisioning MQTT protocol is described at
  * https://docs.microsoft.com/en-us/azure/iot-dps/iot-dps-mqtt-support.
- * 
+ *
  */
 
 #ifndef NX_AZURE_IOT_PROVISIONING_CLIENT_H
@@ -74,7 +76,7 @@ typedef struct NX_AZURE_IOT_PROVISIONING_THREAD_STRUCT
 
 /**
  * @brief Azure IoT Provisining Client struct
- * 
+ *
  */
 typedef struct NX_AZURE_IOT_PROVISIONING_CLIENT_STRUCT
 {
@@ -88,7 +90,9 @@ typedef struct NX_AZURE_IOT_PROVISIONING_CLIENT_STRUCT
     UINT                                    nx_azure_iot_provisioning_client_request_id;
     UINT                                    nx_azure_iot_provisioning_client_result;
     NX_AZURE_IOT_PROVISIONING_RESPONSE      nx_azure_iot_provisioning_client_response;
-    VOID                                  (*nx_azure_iot_provisioning_client_on_complete_callback)(struct NX_AZURE_IOT_PROVISIONING_CLIENT_STRUCT *prov_client_ptr, UINT status);
+    VOID                                  (*nx_azure_iot_provisioning_client_on_complete_callback)(
+                                           struct NX_AZURE_IOT_PROVISIONING_CLIENT_STRUCT *prov_client_ptr,
+                                           UINT status);
 
     UCHAR                                  *nx_azure_iot_provisioning_client_endpoint;
     UINT                                    nx_azure_iot_provisioning_client_endpoint_length;
@@ -109,7 +113,7 @@ typedef struct NX_AZURE_IOT_PROVISIONING_CLIENT_STRUCT
 /**
  * @brief Initialize Azure IoT Provisioning instance
  * @details This routine initializes the device to the IoT provisioning service.
- * 
+ *
  * @param[in] prov_client_ptr A pointer to a #NX_AZURE_IOT_PROVISIONING_CLIENT.
  * @param[in] nx_azure_iot_ptr A pointer to a #NX_AZURE_IOT.
  * @param[in] endpoint A `UCHAR` pointer to IoT Provisioning endpoint. Must be `NULL` terminated.
@@ -141,7 +145,7 @@ UINT nx_azure_iot_provisioning_client_initialize(NX_AZURE_IOT_PROVISIONING_CLIEN
 /**
  * @brief Cleanup the Azure IoT Provisioning Client.
  * @details This routine de-initializes the Azure IoT Provisioning Client.
- * 
+ *
  * @param[in] prov_client_ptr A pointer to a #NX_AZURE_IOT_PROVISIONING_CLIENT.
  * @return A `UINT` with the result of the API.
  *  @retval #NX_AZURE_IOT_SUCCESS Successfully cleaned up AZ IoT Provisioning Client Instance.
@@ -151,7 +155,7 @@ UINT nx_azure_iot_provisioning_client_deinitialize(NX_AZURE_IOT_PROVISIONING_CLI
 /**
  * @brief Set client certificate.
  * @details This routine sets the device certificate.
- * 
+ *
  * @param[in] prov_client_ptr A pointer to a #NX_AZURE_IOT_PROVISIONING_CLIENT.
  * @param[in] x509_cert A pointer to a `NX_SECURE_X509_CERT` client cert.
  * @return A `UINT` with the result of the API.
@@ -163,7 +167,7 @@ UINT nx_azure_iot_provisioning_client_device_cert_set(NX_AZURE_IOT_PROVISIONING_
 /**
  * @brief Set symmetric key
  * @details This routine sets symmetric key.
- * 
+ *
  * @param[in] prov_client_ptr A pointer to a #NX_AZURE_IOT_PROVISIONING_CLIENT.
  * @param[in] symmetric_key A UCHAR pointer to a symmetric key.
  * @param[in] symmetric_key_length Length of symmetric key.
@@ -176,7 +180,7 @@ UINT nx_azure_iot_provisioning_client_symmetric_key_set(NX_AZURE_IOT_PROVISIONIN
 /**
  * @brief Register device to Azure IoT Provisioning service.
  * @details This routine registers device to Azure IoT Provisioning service.
- * 
+ *
  * @param[in] prov_client_ptr A pointer to a #NX_AZURE_IOT_PROVISIONING_CLIENT.
  * @param[in] wait_option Number of ticks to block for device registration.
  * @return A `UINT` with the result of the API.
@@ -188,19 +192,21 @@ UINT nx_azure_iot_provisioning_client_register(NX_AZURE_IOT_PROVISIONING_CLIENT 
 /**
  * @brief Set registration completion callback
  * @details This routine sets the callback for registration completion.
- * 
+ *
  * @param[in] prov_client_ptr A pointer to a #NX_AZURE_IOT_PROVISIONING_CLIENT.
  * @param[in] on_complete_callback Registration completion callback.
  * @return A `UINT` with the result of the API.
  *  @retval #NX_AZURE_IOT_SUCCESS Successful register completion callback.
  */
 UINT nx_azure_iot_provisioning_client_completion_callback_set(NX_AZURE_IOT_PROVISIONING_CLIENT *prov_client_ptr,
-                                                              VOID (*on_complete_callback)(struct NX_AZURE_IOT_PROVISIONING_CLIENT_STRUCT *prov_client_ptr, UINT status));
+                                                              VOID (*on_complete_callback)(
+                                                                    struct NX_AZURE_IOT_PROVISIONING_CLIENT_STRUCT *client_ptr,
+                                                                    UINT status));
 
 /**
  * @brief Get IoTHub device info into user supplied buffer.
  * @details This routine gets the device id and puts it into a user supplied buffer.
- * 
+ *
  * @param[in] prov_client_ptr A pointer to a #NX_AZURE_IOT_PROVISIONING_CLIENT.
  * @param[out] iothub_hostname Buffer pointer that will contain IoTHub hostname.
  * @param[in/out] iothub_hostname_len Pointer to UINT that contains size of buffer supplied. On successful return,

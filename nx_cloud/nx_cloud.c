@@ -48,7 +48,7 @@ static VOID _nx_cloud_periodic_timer_entry(ULONG cloud_ptr_value);
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nxe_cloud_create                                   PORTABLE C      */
-/*                                                           6.0          */
+/*                                                           6.0 Preview  */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -81,7 +81,7 @@ static VOID _nx_cloud_periodic_timer_entry(ULONG cloud_ptr_value);
 /*                                                                        */
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     Yuxin Zhou               Initial Version 6.0           */
+/*  05-19-2020     Yuxin Zhou               Initial Version 6.0 Preview   */
 /*                                                                        */
 /**************************************************************************/
 UINT _nxe_cloud_create(NX_CLOUD *cloud_ptr, const CHAR *cloud_name, VOID *memory_ptr, ULONG memory_size, UINT priority)
@@ -124,7 +124,7 @@ UINT status;
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nx_cloud_create                                    PORTABLE C      */
-/*                                                           6.0          */
+/*                                                           6.0 Preview  */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -160,7 +160,7 @@ UINT status;
 /*                                                                        */
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     Yuxin Zhou               Initial Version 6.0           */
+/*  05-19-2020     Yuxin Zhou               Initial Version 6.0 Preview   */
 /*                                                                        */
 /**************************************************************************/
 UINT _nx_cloud_create(NX_CLOUD *cloud_ptr, const CHAR* cloud_name, VOID* memory_ptr, ULONG memory_size, UINT priority)
@@ -261,7 +261,7 @@ UINT old_threshold = 0;
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nxe_cloud_delete                                   PORTABLE C      */
-/*                                                           6.0          */
+/*                                                           6.0 Preview  */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -290,7 +290,7 @@ UINT old_threshold = 0;
 /*                                                                        */
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     Yuxin Zhou               Initial Version 6.0           */
+/*  05-19-2020     Yuxin Zhou               Initial Version 6.0 Preview   */
 /*                                                                        */
 /**************************************************************************/
 UINT _nxe_cloud_delete(NX_CLOUD *cloud_ptr)
@@ -321,7 +321,7 @@ UINT status;
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nx_cloud_delete                                    PORTABLE C      */
-/*                                                           6.0          */
+/*                                                           6.0 Preview  */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -363,7 +363,7 @@ UINT status;
 /*                                                                        */
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     Yuxin Zhou               Initial Version 6.0           */
+/*  05-19-2020     Yuxin Zhou               Initial Version 6.0 Preview   */
 /*                                                                        */
 /**************************************************************************/
 UINT _nx_cloud_delete(NX_CLOUD *cloud_ptr)
@@ -426,7 +426,7 @@ UINT old_threshold = 0;
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nxe_cloud_module_register                          PORTABLE C      */
-/*                                                           6.0          */
+/*                                                           6.0 Preview  */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -463,7 +463,7 @@ UINT old_threshold = 0;
 /*                                                                        */
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     Yuxin Zhou               Initial Version 6.0           */
+/*  05-19-2020     Yuxin Zhou               Initial Version 6.0 Preview   */
 /*                                                                        */
 /**************************************************************************/
 UINT _nxe_cloud_module_register(NX_CLOUD* cloud_ptr, NX_CLOUD_MODULE *module_ptr, const CHAR *module_name, ULONG module_registered_event,
@@ -502,7 +502,7 @@ UINT _nxe_cloud_module_register(NX_CLOUD* cloud_ptr, NX_CLOUD_MODULE *module_ptr
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nx_cloud_module_register                           PORTABLE C      */
-/*                                                           6.0          */
+/*                                                           6.0 Preview  */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -542,7 +542,7 @@ UINT _nxe_cloud_module_register(NX_CLOUD* cloud_ptr, NX_CLOUD_MODULE *module_ptr
 /*                                                                        */
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     Yuxin Zhou               Initial Version 6.0           */
+/*  05-19-2020     Yuxin Zhou               Initial Version 6.0 Preview   */
 /*                                                                        */
 /**************************************************************************/
 UINT _nx_cloud_module_register(NX_CLOUD* cloud_ptr, NX_CLOUD_MODULE *module_ptr, const CHAR *module_name, ULONG module_registered_event,
@@ -594,7 +594,7 @@ NX_CLOUD_MODULE *current_module;
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nxe_cloud_module_deregister                        PORTABLE C      */
-/*                                                           6.0          */
+/*                                                           6.0 Preview  */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -627,7 +627,7 @@ NX_CLOUD_MODULE *current_module;
 /*                                                                        */
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     Yuxin Zhou               Initial Version 6.0           */
+/*  05-19-2020     Yuxin Zhou               Initial Version 6.0 Preview   */
 /*                                                                        */
 /**************************************************************************/
 UINT _nxe_cloud_module_deregister(NX_CLOUD* cloud_ptr, NX_CLOUD_MODULE* module_ptr)
@@ -659,7 +659,7 @@ UINT _nxe_cloud_module_deregister(NX_CLOUD* cloud_ptr, NX_CLOUD_MODULE* module_p
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nx_cloud_module_deregister                         PORTABLE C      */
-/*                                                           6.0          */
+/*                                                           6.0 Preview  */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -692,7 +692,7 @@ UINT _nxe_cloud_module_deregister(NX_CLOUD* cloud_ptr, NX_CLOUD_MODULE* module_p
 /*                                                                        */
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     Yuxin Zhou               Initial Version 6.0           */
+/*  05-19-2020     Yuxin Zhou               Initial Version 6.0 Preview   */
 /*                                                                        */
 /**************************************************************************/
 UINT _nx_cloud_module_deregister(NX_CLOUD* cloud_ptr, NX_CLOUD_MODULE* module_ptr)
@@ -756,7 +756,7 @@ UINT            found = NX_FALSE;
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nxe_cloud_module_event_set                         PORTABLE C      */
-/*                                                           6.0          */
+/*                                                           6.0 Preview  */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -789,7 +789,7 @@ UINT            found = NX_FALSE;
 /*                                                                        */
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     Yuxin Zhou               Initial Version 6.0           */
+/*  05-19-2020     Yuxin Zhou               Initial Version 6.0 Preview   */
 /*                                                                        */
 /**************************************************************************/
 UINT _nxe_cloud_module_event_set(NX_CLOUD_MODULE *cloud_module, ULONG module_own_event)
@@ -822,7 +822,7 @@ UINT status;
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nx_cloud_module_event_set                          PORTABLE C      */
-/*                                                           6.0          */
+/*                                                           6.0 Preview  */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -857,7 +857,7 @@ UINT status;
 /*                                                                        */
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     Yuxin Zhou               Initial Version 6.0           */
+/*  05-19-2020     Yuxin Zhou               Initial Version 6.0 Preview   */
 /*                                                                        */
 /**************************************************************************/
 UINT _nx_cloud_module_event_set(NX_CLOUD_MODULE *cloud_module, ULONG module_own_event)
@@ -892,7 +892,7 @@ ULONG           registered_event;
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nxe_cloud_module_event_clear                       PORTABLE C      */
-/*                                                           6.0          */
+/*                                                           6.0 Preview  */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -925,7 +925,7 @@ ULONG           registered_event;
 /*                                                                        */
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     Yuxin Zhou               Initial Version 6.0           */
+/*  05-19-2020     Yuxin Zhou               Initial Version 6.0 Preview   */
 /*                                                                        */
 /**************************************************************************/
 UINT _nxe_cloud_module_event_clear(NX_CLOUD_MODULE *cloud_module, ULONG module_own_event)
@@ -958,7 +958,7 @@ UINT status;
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nx_cloud_module_event_clear                        PORTABLE C      */
-/*                                                           6.0          */
+/*                                                           6.0 Preview  */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -993,7 +993,7 @@ UINT status;
 /*                                                                        */
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     Yuxin Zhou               Initial Version 6.0           */
+/*  05-19-2020     Yuxin Zhou               Initial Version 6.0 Preview   */
 /*                                                                        */
 /**************************************************************************/
 UINT _nx_cloud_module_event_clear(NX_CLOUD_MODULE *cloud_module, ULONG module_own_event)
@@ -1039,7 +1039,7 @@ ULONG           registered_event;
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nx_cloud_thread_entry                              PORTABLE C      */
-/*                                                           6.0          */
+/*                                                           6.0 Preview  */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -1071,7 +1071,7 @@ ULONG           registered_event;
 /*                                                                        */
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     Yuxin Zhou               Initial Version 6.0           */
+/*  05-19-2020     Yuxin Zhou               Initial Version 6.0 Preview   */
 /*                                                                        */
 /**************************************************************************/
 static VOID _nx_cloud_thread_entry(ULONG cloud_ptr_value)
@@ -1140,7 +1140,7 @@ ULONG           module_own_events;
 /*  FUNCTION                                               RELEASE        */
 /*                                                                        */
 /*    _nx_cloud_periodic_timer_entry                      PORTABLE C      */
-/*                                                           6.0          */
+/*                                                           6.0 Preview  */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -1171,7 +1171,7 @@ ULONG           module_own_events;
 /*                                                                        */
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     Yuxin Zhou               Initial Version 6.0           */
+/*  05-19-2020     Yuxin Zhou               Initial Version 6.0 Preview   */
 /*                                                                        */
 /**************************************************************************/
 static VOID _nx_cloud_periodic_timer_entry(ULONG cloud_ptr_value)

@@ -1,53 +1,82 @@
-![Samples Build CI](https://github.com/azurertos/samples/workflows/Samples%20Build%20CI/badge.svg)
+# Azure IoT Clients
 
-# Samples
+Azure RTOS SDK for Azure IoT services.
 
-This is a sample project that shows how to use threadX in your own MCU project.
+## Documentation
 
-This sample targets a Cortex-M4 MCU, using the ARM GCC toolchain to build.
+Documentation for this library can be found here: [Link](docs/azure_rtos_iot_sdk_api.md)
 
-# Usage
+## Key Features
+
+:heavy_check_mark: feature available  :heavy_check_mark:* feature partially available (see Description for details)  :heavy_multiplication_x: feature planned but not supported
+
+Feature | Azure RTOS SDK for Azure IoT services  | Description
+---------|----------|---------------------
+ [Send device-to-cloud message](https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-messages-d2c) | :heavy_check_mark: | Send device-to-cloud messages to IoT Hub with the option to add custom message properties. 
+ [Receive cloud-to-device messages](https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-messages-c2d) | :heavy_check_mark: | Receive cloud-to-device messages and associated properties from IoT Hub.   
+ [Device Twins](https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-device-twins) | :heavy_check_mark: | IoT Hub persists a device twin for each device that you connect to IoT Hub.  The device can perform operations like get twin document, subscribe to desired property updates.
+ [Direct Methods](https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-direct-methods) | :heavy_check_mark: | IoT Hub gives you the ability to invoke direct methods on devices from the cloud.  
+ [DPS - Device Provisioning Service](https://docs.microsoft.com/azure/iot-dps/) | :heavy_check_mark: | This SDK supports connecting your device to the Device Provisioning Service via, for example, [individual enrollment](https://docs.microsoft.com/azure/iot-dps/concepts-service#enrollment) using an [X.509 leaf certificate](https://docs.microsoft.com/azure/iot-dps/concepts-security#leaf-certificate).  
+ Protocol | MQTT | The Azure RTOS SDK for Azure IoT services supports only MQTT.
+ [Plug and Play](https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play) | Coming Soon | IoT Plug and Play Preview enables solution developers to integrate devices with their solutions without writing any embedded code. 
+
+# Building and using the library
 
 ## Prerequisites
 
-Before using this project, the following tools should be available on your development
-environment:
+Install the following tools:
 
-* CMake 3.13+
-* arm-none-eabi-gcc tools (download from from ARM)
+* [CMake](https://cmake.org/download/) version 3.13.0 or later
+* [GCC compilers for arm-none-eabi](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads)
+* [Ninja](https://ninja-build.org/)
 
-## Building
+## Cloning the repo
 
-1. git clone https://github.com/azurertos/samples.git
-2. cd samples/threadx_simple
-3. cmake -Bbuild -DCMAKE_TOOLCHAIN_FILE=./cmake/cortex_m4.cmake .
-4. cmake --build ./build
+```bash
+$ git clone https://github.com/azure-rtos/azure-iot-preview.git
+$ git submodule update --init
+```
 
-# Resolving the git submodules
+## Building Sample
 
-## Authentication method
+```bash
+$ cd samples
+$ cmake -GNinja -Bbuild -DCMAKE_TOOLCHAIN_FILE=./cmake/cortex_m4.cmake .
+$ cmake --build ./build
+```
 
-Currently the submodules in this project are defined using SSH connection
-strings instead of HTTPS connection strings. If you don't use SSH with git,
-you will need to edit the .gitmodules file, replacing the lines that look like this
+# Repository Structure and Usage
 
-> git@github.com:azurertos/threadx.git
+## Branches & Releases
 
-with lines like this
+The master branch has the most recent code with all new features and bug fixes. It does not represent the latest General Availability (GA) release of the library.
 
-> https://github.com/azurertos/threadx.git
+## Releases
 
-Then you can proceed with the next steps
+Each official release (preview or GA) will be tagged to mark the commit and published to the Github releases tab, e.g. `v6.0-rel`.
 
-## Pulling the submodules
+## Directory layout
 
-1. git submodule init
-2. git submodule update
+```
+- azure_iot
+- docs
+- nx_cloud
+- samples
+  - cmake
+  - lib
+    - netxduo
+    - threadx
+  - ports/cortex_m4/gnu
+  - ports/cortex_m7/gnu
+  - sample_azure_iot_embedded_sdk
+```
 
-# Customizing your build
+# Security
 
-Before you can build and flash this sample to a real device, you may  need to make a few changes:
+Azure RTOS provides OEMs with components to secure communication and to create code and data isolation using underlying MCU/MPU hardware protection mechanisms. It is ultimately the responsibility of the device builder to ensure the device fully meets the evolving security requirements associated with its specific use case.
 
-1. Choose the correct linker script for your board. A few different Cortex-M4 starter scripts are provided in ports/cortex_m4/gnu. You will need to update the CMakeLists file in that directory as required for your hardware.
+# Contribution, feedback and issues
 
-2. Update the vector table as required. The vector table, which in this sample lives in the assembly language file ports/cortex_m4/gnu/tx_vector_table.S, contains the various entry points and interrupt handlers used by your app.
+If you encounter any bugs, have suggestions for new features or if you would like to become an active contributor to this project please follow the instructions provided in the contribution guideline for the corresponding repo.
+
+For general support, please post a question to [Stack Overflow](http://stackoverflow.com/questions/tagged/azure-rtos+threadx) using the `threadx` and `azure-rtos` tags.

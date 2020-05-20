@@ -9,6 +9,8 @@
 /*                                                                        */
 /**************************************************************************/
 
+/* Version: 6.0 Preview */
+
 #include "nx_azure_iot.h"
 
 #ifndef NX_AZURE_IOT_WAIT_OPTION
@@ -20,7 +22,7 @@
 
 /* Convert number to upper hex */
 #define NX_AZURE_IOT_NUMBER_TO_UPPER_HEX(number)    (CHAR)(number + (number < 10 ? '0' : 'A' - 10))
-                                                    
+
 /* Define the prototypes for Azure RTOS IoT.  */
 NX_AZURE_IOT *_nx_azure_iot_created_ptr;
 
@@ -67,7 +69,7 @@ CHAR ch;
             dest_ptr[dest_index++] = NX_AZURE_IOT_NUMBER_TO_UPPER_HEX((ch & 0x0F));
         }
     }
-    
+
     *bytes_copied = dest_index;
 
     return NX_AZURE_IOT_SUCCESS;
@@ -84,7 +86,8 @@ NX_AZURE_IOT *nx_azure_iot_ptr = (NX_AZURE_IOT *)nx_azure_iot;
     /* Process DPS events.  */
     if (nx_azure_iot_ptr -> nx_azure_iot_provisioning_client_event_process)
     {
-        nx_azure_iot_ptr -> nx_azure_iot_provisioning_client_event_process(nx_azure_iot_ptr, common_events, module_own_events);
+        nx_azure_iot_ptr -> nx_azure_iot_provisioning_client_event_process(nx_azure_iot_ptr, common_events,
+                                                                           module_own_events);
     }
 }
 
@@ -435,7 +438,8 @@ NX_PACKET *current_packet_ptr;
             packet_ptr -> nx_packet_append_ptr = packet_ptr -> nx_packet_data_end;
 
             /* Move data in current packet to nx_packet_data_start. */
-            memmove((VOID *)current_packet_ptr -> nx_packet_data_start, (VOID *)(current_packet_ptr -> nx_packet_prepend_ptr + size),
+            memmove((VOID *)current_packet_ptr -> nx_packet_data_start,
+                    (VOID *)(current_packet_ptr -> nx_packet_prepend_ptr + size),
                     (copy_size - size));
             current_packet_ptr -> nx_packet_prepend_ptr = current_packet_ptr -> nx_packet_data_start;
             current_packet_ptr -> nx_packet_append_ptr = current_packet_ptr -> nx_packet_data_start + (copy_size - size);

@@ -4,7 +4,7 @@
 # Linker script
 # Note: You will need to change this file to match your specific MCU's memory layout
 set(LINKER_SCRIPT 
-    "${CMAKE_CURRENT_SOURCE_DIR}/STM32F723IEKx_FLASH.ld"
+    "${CMAKE_CURRENT_SOURCE_DIR}/GENERIC_CORTEX_M7.ld"
     PARENT_SCOPE
 )
 

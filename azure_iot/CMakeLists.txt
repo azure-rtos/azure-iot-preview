@@ -23,14 +23,39 @@ target_sources(${PROJECT_NAME}
     ${CMAKE_CURRENT_LIST_DIR}/nx_azure_iot_provisioning_client.h
     ${CMAKE_CURRENT_LIST_DIR}/nx_azure_iot.c
     ${CMAKE_CURRENT_LIST_DIR}/nx_azure_iot.h
+    
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/iot/common/src/az_iot_common.c
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/iot/hub/src/az_iot_hub_client.c
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/iot/hub/src/az_iot_hub_client_c2d.c
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/iot/hub/src/az_iot_hub_client_methods.c
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/iot/hub/src/az_iot_hub_client_sas.c
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/iot/hub/src/az_iot_hub_client_telemetry.c
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/iot/hub/src/az_iot_hub_client_twin.c
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/iot/provisioning/src/az_iot_provisioning_client.c
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/iot/provisioning/src/az_iot_provisioning_client_sas.c
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/core/core/src/az_precondition.c
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/platform/noplatform/src/az_noplatform.c
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/core/core/src/az_json_parser.c
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/core/core/src/az_json_pointer.c
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/core/core/src/az_json_string.c
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/core/core/src/az_json_token.c
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/core/core/src/az_log.c
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/core/core/src/az_span.c
 )
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}
+    
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/core/core/inc
+    # TODO: this internal include is only use for compiling azure embedded sdk lib
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/core/core/internal
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/iot/common/inc
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/iot/hub/inc
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/iot/provisioning/inc
+    ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/platform/noplatform/inc
 )
 
-add_subdirectory(azure-sdk-for-c)
 
 # Define any required dependencies between this library and others
 target_link_libraries(${PROJECT_NAME} PUBLIC "azrtos::nx_cloud")

@@ -26,7 +26,7 @@
 /*  APPLICATION INTERFACE DEFINITION                       RELEASE        */
 /*                                                                        */
 /*    nx_cloud.h                                          PORTABLE C      */
-/*                                                           6.0          */
+/*                                                           6.0 Preview  */
 /*  AUTHOR                                                                */
 /*                                                                        */
 /*    Yuxin Zhou, Microsoft Corporation                                   */
@@ -40,7 +40,7 @@
 /*                                                                        */
 /*    DATE              NAME                      DESCRIPTION             */
 /*                                                                        */
-/*  05-19-2020     Yuxin Zhou               Initial Version 6.0           */
+/*  05-19-2020     Yuxin Zhou               Initial Version 6.0 Preview   */
 /*                                                                        */
 /**************************************************************************/
 

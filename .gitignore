@@ -1,5 +1,5 @@
 .vscode/
-_deps/
+_deps/ 
 build/
 CMakeFiles/
 CMakeScripts/

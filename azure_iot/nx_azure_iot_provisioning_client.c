@@ -9,6 +9,8 @@
 /*                                                                        */
 /**************************************************************************/
 
+/* Version: 6.0 Preview */
+
 #include "nx_azure_iot_provisioning_client.h"
 
 #include "az_span.h"
@@ -75,7 +77,6 @@ UINT status;
         return(status);
     }
 
-    /* TODO: Support chained packet */
     if ((ULONG)(packet_ptr -> nx_packet_append_ptr - packet_ptr -> nx_packet_prepend_ptr) <
         (message_offset + message_length))
     {
@@ -135,14 +136,13 @@ NXD_MQTT_CLIENT *mqtt_client_ptr;
 UINT dns_timeout = wait_option;
 NX_AZURE_IOT_RESOURCE *resource_ptr;
 
-    /* Set the DNS timeout as NX_AZURE_IOT_PROVISIONING_CLIENT_DNS_TIMEOUT for non-blocking mode.  */ /* TODO: DNS non-blocking.  */
+    /* Set the DNS timeout as NX_AZURE_IOT_PROVISIONING_CLIENT_DNS_TIMEOUT for non-blocking mode. */
     if (dns_timeout == 0)
     {
         dns_timeout = NX_AZURE_IOT_PROVISIONING_CLIENT_DNS_TIMEOUT;
     }
 
     /* Resolve the host name.  */
-    /* TODO: Once non-block dns resolve is implemented update this */
     status = nxd_dns_host_by_name_get(prov_client_ptr -> nx_azure_iot_ptr -> nx_azure_iot_dns_ptr,
                                       prov_client_ptr -> nx_azure_iot_provisioning_client_endpoint,
                                       &server_address, dns_timeout, NX_IP_VERSION_V4);
@@ -246,7 +246,8 @@ UINT status;
  *  State transitions :
  *      INIT -> {CONNECT|ERROR} -> {REQUEST|ERROR} -> {WAITING_FOR_REPONSE|ERROR} -> {DONE|REQUEST|ERROR}
  **/
-static VOID nx_azure_iot_provisioning_client_update_state(NX_AZURE_IOT_PROVISIONING_CLIENT *context, UINT action_result)
+static VOID nx_azure_iot_provisioning_client_update_state(NX_AZURE_IOT_PROVISIONING_CLIENT *context,
+                                                          UINT action_result)
 {
 UINT state = context -> nx_azure_iot_provisioning_client_state;
 NX_AZURE_IOT_PROVISIONING_THREAD *thread_list_ptr;
@@ -326,14 +327,15 @@ NX_AZURE_IOT_PROVISIONING_THREAD *thread_list_ptr;
     }
 }
 
-static VOID nx_azure_iot_provisioning_client_mqtt_connect_notify(struct NXD_MQTT_CLIENT_STRUCT *client_ptr, UINT status, VOID *context)
+static VOID nx_azure_iot_provisioning_client_mqtt_connect_notify(struct NXD_MQTT_CLIENT_STRUCT *client_ptr,
+                                                                 UINT status, VOID *context)
 {
 
 NX_AZURE_IOT_PROVISIONING_CLIENT *prov_client_ptr = (NX_AZURE_IOT_PROVISIONING_CLIENT*)context;
 
     NX_PARAMETER_NOT_USED(client_ptr);
 
-    /* mutex might got deleted by deinitalization */
+    /* mutex might got deleted by deinitialization */
     if (tx_mutex_get(prov_client_ptr -> nx_azure_iot_ptr -> nx_azure_iot_mutex_ptr, NX_WAIT_FOREVER))
     {
         return;
@@ -409,7 +411,6 @@ UINT status;
     if (context -> nx_azure_iot_provisioning_client_req_timeout == 1)
     {
 
-        /* TODO: check with Bo why we can't generate events from system thread. */
         status = _nx_cloud_module_event_set(&(context -> nx_azure_iot_ptr -> nx_azure_iot_cloud_module),
                                             NX_AZURE_IOT_PROVISIONING_CLIENT_REQUEST_EVENT);
         if (status)
@@ -601,7 +602,8 @@ az_result core_result;
     else
     {
         core_result = az_iot_provisioning_client_query_status_get_publish_topic(&(prov_client_ptr -> nx_azure_iot_provisioning_client_core),
-                                                                                register_response, (CHAR *)buffer_ptr, buffer_size, &mqtt_topic_length);
+                                                                                register_response, (CHAR *)buffer_ptr,
+                                                                                buffer_size, &mqtt_topic_length);
     }
 
     if (az_failed(core_result))
@@ -657,8 +659,9 @@ az_result core_result;
         return(status);
     }
 
-    status = nx_azure_iot_publish_mqtt_packet(&(prov_client_ptr -> nx_azure_iot_provisioning_client_resource.resource_mqtt), packet_ptr,
-                                              mqtt_topic_length, packet_id, NX_AZURE_IOT_MQTT_QOS_1, wait_option);
+    status = nx_azure_iot_publish_mqtt_packet(&(prov_client_ptr -> nx_azure_iot_provisioning_client_resource.resource_mqtt),
+                                              packet_ptr, mqtt_topic_length, packet_id, NX_AZURE_IOT_MQTT_QOS_1,
+                                              wait_option);
 
     if (status)
     {
@@ -824,7 +827,7 @@ az_span registration_id_span = az_span_init(registration_id, (INT)registration_i
     if (az_failed(az_iot_provisioning_client_init(&(prov_client_ptr -> nx_azure_iot_provisioning_client_core),
                                                   endpoint_span, id_scope_span, registration_id_span, NULL)))
     {
-         LogError("IoTProvisioning client create fail: failed to intialize core client");
+         LogError("IoTProvisioning client create fail: failed to initialize core client");
         return(NX_AZURE_IOT_SDK_CORE_ERROR);
     }
 
@@ -1158,7 +1161,8 @@ UINT status;
 
 UINT nx_azure_iot_provisioning_client_completion_callback_set(NX_AZURE_IOT_PROVISIONING_CLIENT *prov_client_ptr,
                                                               VOID (*on_complete_callback)(
-                                                                  struct NX_AZURE_IOT_PROVISIONING_CLIENT_STRUCT *prov_client_ptr, UINT status))
+                                                                    struct NX_AZURE_IOT_PROVISIONING_CLIENT_STRUCT *client_ptr,
+                                                                    UINT status))
 {
     if ((prov_client_ptr == NX_NULL) || (prov_client_ptr -> nx_azure_iot_ptr == NX_NULL))
     {

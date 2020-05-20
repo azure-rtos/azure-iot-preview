@@ -9,6 +9,8 @@
 /*                                                                        */
 /**************************************************************************/
 
+/* Version: 6.0 Preview */
+
 /**
  * @file nx_azure_iot_hub_client.h
  *
@@ -32,13 +34,26 @@ extern   "C" {
 #include "nxd_dns.h"
 #include "nxd_mqtt_client.h"
 
-#define NX_AZURE_IOT_HUB_NONE                                       0x00000000 /**< Value denoting a message is of "None" type */
-#define NX_AZURE_IOT_HUB_ALL_MESSAGE                                0xFFFFFFFF /**< Value denoting a message is of "all" type */
-#define NX_AZURE_IOT_HUB_CLOUD_TO_DEVICE_MESSAGE                    0x00000001 /**< Value denoting a message is a cloud-to-device message */
-#define NX_AZURE_IOT_HUB_DIRECT_METHOD                              0x00000002 /**< Value denoting a message is a direct method */
-#define NX_AZURE_IOT_HUB_DEVICE_TWIN_PROPERTIES                     0x00000004 /**< Value denoting a message is a device twin message */
-#define NX_AZURE_IOT_HUB_DEVICE_TWIN_DESIRED_PROPERTIES             0x00000008 /**< Value denoting a message is a device twin desired properties message */
-#define NX_AZURE_IOT_HUB_DEVICE_TWIN_REPORTED_PROPERTIES_RESPONSE   0x00000010 /**< Value denoting a message is a device reported properties response */
+/**< Value denoting a message is of "None" type */
+#define NX_AZURE_IOT_HUB_NONE                                       0x00000000
+
+/**< Value denoting a message is of "all" type */
+#define NX_AZURE_IOT_HUB_ALL_MESSAGE                                0xFFFFFFFF
+
+/**< Value denoting a message is a cloud-to-device message */
+#define NX_AZURE_IOT_HUB_CLOUD_TO_DEVICE_MESSAGE                    0x00000001
+
+/**< Value denoting a message is a direct method */
+#define NX_AZURE_IOT_HUB_DIRECT_METHOD                              0x00000002
+
+/**< Value denoting a message is a device twin message */
+#define NX_AZURE_IOT_HUB_DEVICE_TWIN_PROPERTIES                     0x00000004
+
+/**< Value denoting a message is a device twin desired properties message */
+#define NX_AZURE_IOT_HUB_DEVICE_TWIN_DESIRED_PROPERTIES             0x00000008
+
+/**< Value denoting a message is a device reported properties response */
+#define NX_AZURE_IOT_HUB_DEVICE_TWIN_REPORTED_PROPERTIES_RESPONSE   0x00000010
 
 /* Set the default timeout for DNS query.  */
 #ifndef NX_AZURE_IOT_HUB_CLIENT_DNS_TIMEOUT
@@ -51,19 +66,24 @@ extern   "C" {
 #endif /* NX_AZURE_IOT_HUB_CLIENT_TOKEN_EXPIRY */
 
 /* Define AZ IoT Hub Client state.  */
-#define NX_AZURE_IOT_HUB_CLIENT_STATUS_NOT_CONNECTED    0 /**< The client is not connected */
-#define NX_AZURE_IOT_HUB_CLIENT_STATUS_CONNECTING       1 /**< The client is connecting */
-#define NX_AZURE_IOT_HUB_CLIENT_STATUS_CONNECTED        2 /**< The client is connected */
+/**< The client is not connected */
+#define NX_AZURE_IOT_HUB_CLIENT_STATUS_NOT_CONNECTED    0
+
+/**< The client is connecting */
+#define NX_AZURE_IOT_HUB_CLIENT_STATUS_CONNECTING       1
+
+/**< The client is connected */
+#define NX_AZURE_IOT_HUB_CLIENT_STATUS_CONNECTED        2
 
 
 typedef struct NX_AZURE_IOT_THREAD_STRUCT
 {
-    TX_THREAD                              *thread_ptr;
-    struct NX_AZURE_IOT_THREAD_STRUCT      *thread_next;
-    UINT                                    thread_message_type;
-    UINT                                    thread_expected_id;     /* Used by device twin. */
-    UINT                                    thread_response_status; /* Used by device twin. */
-    NX_PACKET                              *thread_received_message;
+    TX_THREAD                           *thread_ptr;
+    struct NX_AZURE_IOT_THREAD_STRUCT   *thread_next;
+    UINT                                 thread_message_type;
+    UINT                                 thread_expected_id;     /* Used by device twin. */
+    UINT                                 thread_response_status; /* Used by device twin. */
+    NX_PACKET                           *thread_received_message;
 } NX_AZURE_IOT_THREAD;
 
 /* Forward declration*/
@@ -71,12 +91,12 @@ struct NX_AZURE_IOT_HUB_CLIENT_STRUCT;
 
 typedef struct NX_AZURE_IOT_HUB_CLIENT_RECEIVE_MESSAGE_STRUCT
 {
-    NX_PACKET                              *message_head;
-    NX_PACKET                              *message_tail;
-    VOID                                  (*message_callback)(struct NX_AZURE_IOT_HUB_CLIENT_STRUCT *hub_client_ptr, VOID *args);
-    VOID                                   *message_callback_args;
-    UINT                                  (*message_process)(struct NX_AZURE_IOT_HUB_CLIENT_STRUCT *hub_client_ptr, NX_PACKET *packet_ptr,
-                                                             ULONG topic_offset, USHORT topic_length);
+    NX_PACKET    *message_head;
+    NX_PACKET    *message_tail;
+    VOID        (*message_callback)(struct NX_AZURE_IOT_HUB_CLIENT_STRUCT *hub_client_ptr, VOID *args);
+    VOID         *message_callback_args;
+    UINT        (*message_process)(struct NX_AZURE_IOT_HUB_CLIENT_STRUCT *hub_client_ptr,
+                                   NX_PACKET *packet_ptr, ULONG topic_offset, USHORT topic_length);
 } NX_AZURE_IOT_HUB_CLIENT_RECEIVE_MESSAGE;
 
 /**
@@ -93,16 +113,18 @@ typedef struct NX_AZURE_IOT_HUB_CLIENT_STRUCT
     NX_AZURE_IOT_HUB_CLIENT_RECEIVE_MESSAGE nx_azure_iot_hub_client_device_twin_message;
     NX_AZURE_IOT_HUB_CLIENT_RECEIVE_MESSAGE nx_azure_iot_hub_client_device_twin_desired_properties_message;
     NX_AZURE_IOT_HUB_CLIENT_RECEIVE_MESSAGE nx_azure_iot_hub_client_direct_method_message;
-    VOID                                  (*nx_azure_iot_hub_client_report_properties_response_callback)(struct NX_AZURE_IOT_HUB_CLIENT_STRUCT *hub_client_ptr,
-                                                                                                         UINT request_id,
-                                                                                                         UINT response_status,
-                                                                                                         VOID *args);
+    VOID                                  (*nx_azure_iot_hub_client_report_properties_response_callback)(
+                                           struct NX_AZURE_IOT_HUB_CLIENT_STRUCT *hub_client_ptr,
+                                           UINT request_id, UINT response_status, VOID *args);
     VOID                                   *nx_azure_iot_hub_client_report_properties_response_callback_args;
 
-    VOID                                  (*nx_azure_iot_hub_client_connection_status_callback)(struct NX_AZURE_IOT_HUB_CLIENT_STRUCT *hub_client_ptr, UINT status);
-    UINT                                  (*nx_azure_iot_hub_client_token_refresh)(struct NX_AZURE_IOT_HUB_CLIENT_STRUCT *hub_client_ptr,
-                                                                                   ULONG expiry_time_secs, UCHAR *key, UINT key_len,
-                                                                                   UCHAR *sas_buffer, UINT sas_buffer_len, UINT *sas_length);
+    VOID                                  (*nx_azure_iot_hub_client_connection_status_callback)(
+                                           struct NX_AZURE_IOT_HUB_CLIENT_STRUCT *hub_client_ptr,
+                                           UINT status);
+    UINT                                  (*nx_azure_iot_hub_client_token_refresh)(
+                                           struct NX_AZURE_IOT_HUB_CLIENT_STRUCT *hub_client_ptr,
+                                           ULONG expiry_time_secs, UCHAR *key, UINT key_len,
+                                           UCHAR *sas_buffer, UINT sas_buffer_len, UINT *sas_length);
 
     UINT                                    nx_azure_iot_hub_client_request_id;
     UCHAR                                  *nx_azure_iot_hub_client_symmetric_key;
@@ -215,7 +237,9 @@ UINT nx_azure_iot_hub_client_disconnect(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr)
  *   @retval #NX_AZURE_IOT_SUCCESS  Successful if connection status callback is set.
  */
 UINT nx_azure_iot_hub_client_connection_status_callback_set(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
-                                                            VOID (*connection_status_cb)(struct NX_AZURE_IOT_HUB_CLIENT_STRUCT *hub_client_ptr, UINT status));
+                                                            VOID (*connection_status_cb)(
+                                                                  struct NX_AZURE_IOT_HUB_CLIENT_STRUCT *client_ptr,
+                                                                  UINT status));
 
 /**
  * @brief Sets receive callback function
@@ -333,7 +357,8 @@ UINT nx_azure_iot_hub_client_cloud_message_disable(NX_AZURE_IOT_HUB_CLIENT *hub_
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS  Successful if C2D message is received.
  */
-UINT nx_azure_iot_hub_client_cloud_message_receive(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr, NX_PACKET **packet_pptr, UINT wait_option);
+UINT nx_azure_iot_hub_client_cloud_message_receive(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
+                                                   NX_PACKET **packet_pptr, UINT wait_option);
 
 /**
  * @brief Retrieve the property with given property name in the C2D message.
@@ -348,9 +373,10 @@ UINT nx_azure_iot_hub_client_cloud_message_receive(NX_AZURE_IOT_HUB_CLIENT *hub_
  *   @retval #NX_AZURE_IOT_SUCCESS Successful if property is found and copied successfully into user buffer.
  *   @retval #NX_AZURE_IOT_NOT_FOUND If property is not found.
  */
-UINT nx_azure_iot_hub_client_cloud_message_property_get(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr, NX_PACKET *packet_ptr,
-                                                        UCHAR *property_name, USHORT property_name_length,
-                                                        UCHAR **property_value, USHORT *property_value_length);
+UINT nx_azure_iot_hub_client_cloud_message_property_get(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
+                                                        NX_PACKET *packet_ptr, UCHAR *property_name,
+                                                        USHORT property_name_length, UCHAR **property_value,
+                                                        USHORT *property_value_length);
 
 /**
  * @brief Enables device twin feature
@@ -374,7 +400,7 @@ UINT nx_azure_iot_hub_client_device_twin_disable(NX_AZURE_IOT_HUB_CLIENT *hub_cl
 
 /**
  * @brief Sets reported properties response callback function
- * @details This routine sets the reponse receive callback function for repoerted properties. This callback
+ * @details This routine sets the reponse receive callback function for reported properties. This callback
  *          function is invoked when a response is received from Azure IoT hub for reported properties and no
  *          thread is waiting for response. Setting the callback function to `NULL` disables the callback
  *          function.
@@ -406,7 +432,7 @@ UINT nx_azure_iot_hub_client_report_properties_response_callback_set(NX_AZURE_IO
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS Successful if device twin reported properties is sent successfully.
  */
-UINT nx_azure_iot_hub_client_device_twin_reported_propetries_send(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
+UINT nx_azure_iot_hub_client_device_twin_reported_properties_send(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                                                   UCHAR *message_buffer, UINT message_length,
                                                                   UINT *request_id_ptr, UINT *response_status_ptr,
                                                                   UINT wait_option);
@@ -504,8 +530,9 @@ UINT nx_azure_iot_hub_client_direct_method_message_receive(NX_AZURE_IOT_HUB_CLIE
  *   @retval #NX_AZURE_IOT_SUCCESS  Successful if direct method response is send.
  */
 UINT nx_azure_iot_hub_client_direct_method_message_response(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
-                                                            UINT status_code, VOID *context_ptr, USHORT context_length,
-                                                            UCHAR *payload, UINT payload_length, UINT wait_option);
+                                                            UINT status_code, VOID *context_ptr,
+                                                            USHORT context_length, UCHAR *payload,
+                                                            UINT payload_length, UINT wait_option);
 #ifdef __cplusplus
 }
 #endif

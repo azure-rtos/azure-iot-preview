@@ -9,9 +9,11 @@
 /*                                                                        */
 /**************************************************************************/
 
+/* Version: 6.0 Preview */
+
 /**
  * @file nx_azure_iot.h
- * 
+ *
  */
 
 #ifndef NX_AZURE_IOT_H
@@ -48,7 +50,11 @@ extern   "C" {
 #define LogError(...)
 #define LogInfo(...)
 #define LogDebug(...)
-#define LogOutput(type,...) {NX_AZURE_IOT_LOG("[" type "]"); NX_AZURE_IOT_LOG( __VA_ARGS__); NX_AZURE_IOT_LOG("\r\n");}
+#define LogOutput(type,...) {\
+                                NX_AZURE_IOT_LOG("[" type "]");\
+                                NX_AZURE_IOT_LOG( __VA_ARGS__);\
+                                NX_AZURE_IOT_LOG("\r\n");\
+                            }
 
 #if NX_AZURE_IOT_LOG_LEVEL > 0
 #include <stdio.h>
@@ -68,28 +74,44 @@ extern   "C" {
 #define NX_AZURE_IOT_MQTT_QOS_1                           1
 
 /* Define AZ IoT SDK event flags. These events are processed by the Cloud thread.  */
-#define NX_AZURE_IOT_HUB_CLIENT_CONNECT_EVENT             ((ULONG)0x00000001)       /* IoT Hub Client Connect event      */ /* TODO: clean it if there is no need in future.  */
-#define NX_AZURE_IOT_PROVISIONING_CLIENT_CONNECT_EVENT    ((ULONG)0x00000002)       /* Provisioning Client Connect event */
-#define NX_AZURE_IOT_PROVISIONING_CLIENT_SUBSCRIBE_EVENT  ((ULONG)0x00000004)       /* Provisioning Client Subscribe event */
-#define NX_AZURE_IOT_PROVISIONING_CLIENT_REQUEST_EVENT    ((ULONG)0x00000008)       /* Provisioning Client Request event */
-#define NX_AZURE_IOT_PROVISIONING_CLIENT_RESPONSE_EVENT   ((ULONG)0x00000010)       /* Provisioning Client Response event */
-#define NX_AZURE_IOT_PROVISIONING_CLIENT_DISCONNECT_EVENT ((ULONG)0x00000020)       /* Provisioning Client Disconnect event */
+/* IoT Hub Client Connect event      */
+#define NX_AZURE_IOT_HUB_CLIENT_CONNECT_EVENT             ((ULONG)0x00000001)
+
+/* Provisioning Client Connect event */
+#define NX_AZURE_IOT_PROVISIONING_CLIENT_CONNECT_EVENT    ((ULONG)0x00000002)
+
+/* Provisioning Client Subscribe event */
+#define NX_AZURE_IOT_PROVISIONING_CLIENT_SUBSCRIBE_EVENT  ((ULONG)0x00000004)
+
+/* Provisioning Client Request event */
+#define NX_AZURE_IOT_PROVISIONING_CLIENT_REQUEST_EVENT    ((ULONG)0x00000008)
+
+/* Provisioning Client Response event */
+#define NX_AZURE_IOT_PROVISIONING_CLIENT_RESPONSE_EVENT   ((ULONG)0x00000010)
+
+/* Provisioning Client Disconnect event */
+#define NX_AZURE_IOT_PROVISIONING_CLIENT_DISCONNECT_EVENT ((ULONG)0x00000020)
 
 /* API return values.  */
-#define NX_AZURE_IOT_SUCCESS                              0x0 /**< The operation was successful. */
+/**< The operation was successful. */
+#define NX_AZURE_IOT_SUCCESS                              0x0
 #define NX_AZURE_IOT_SDK_CORE_ERROR                       0x20001
 #define NX_AZURE_IOT_INVALID_PARAMETER                    0x20002
 #define NX_AZURE_IOT_INSUFFICIENT_BUFFER_SPACE            0x20003
 #define NX_AZURE_IOT_INVALID_PACKET                       0x20004
 #define NX_AZURE_IOT_NO_PACKET                            0x20005
-#define NX_AZURE_IOT_NOT_FOUND                            0x20006 /**< If the item requested was not found */
+
+/**< If the item requested was not found */
+#define NX_AZURE_IOT_NOT_FOUND                            0x20006
 #define NX_AZURE_IOT_NOT_ENABLED                          0x20007
 #define NX_AZURE_IOT_NOT_INITIALIZED                      0x20008
 #define NX_AZURE_IOT_NOT_SUPPORTED                        0x20009
 #define NX_AZURE_IOT_ALREADY_CONNECTED                    0x2000A
 #define NX_AZURE_IOT_CONNECTING                           0x2000B
 #define NX_AZURE_IOT_DISCONNECTED                         0x2000C
-#define NX_AZURE_IOT_PENDING                              0x2000D /**< The operation is pending. */
+
+/**< The operation is pending. */
+#define NX_AZURE_IOT_PENDING                              0x2000D
 #define NX_AZURE_IOT_SERVER_RESPONSE_ERROR                0x2000E
 #define NX_AZURE_IOT_TOPIC_TOO_LONG                       0x2000F
 #define NX_AZURE_IOT_MESSAGE_TOO_LONG                     0x20010
@@ -114,7 +136,7 @@ extern   "C" {
 
 /**
  * @brief Resource struct
- * 
+ *
  */
 typedef struct NX_AZURE_IOT_RESOURCE_STRUCT
 {
@@ -144,7 +166,7 @@ typedef struct NX_AZURE_IOT_RESOURCE_STRUCT
 
 /**
  * @brief Azure IoT Struct
- * 
+ *
  */
 typedef struct NX_AZURE_IOT_STRUCT
 {
@@ -155,19 +177,22 @@ typedef struct NX_AZURE_IOT_STRUCT
     NX_CLOUD                               nx_azure_iot_cloud;
     NX_CLOUD_MODULE                        nx_azure_iot_cloud_module;
     TX_MUTEX                              *nx_azure_iot_mutex_ptr;
-    VOID                                 (*nx_azure_iot_provisioning_client_event_process)(struct NX_AZURE_IOT_STRUCT *nx_azure_iot_ptr, ULONG common_events, ULONG module_own_events); /* TODO: consider register DPS module in cloud.  */
+
+    VOID                                 (*nx_azure_iot_provisioning_client_event_process)(
+                                          struct NX_AZURE_IOT_STRUCT *nx_azure_iot_ptr,
+                                          ULONG common_events, ULONG module_own_events);
     struct NX_AZURE_IOT_RESOURCE_STRUCT   *nx_azure_iot_resource_list_header;
     UINT                                 (*nx_azure_iot_unix_time_get)(ULONG *unix_time);
 } NX_AZURE_IOT;
 
 /**
  * @brief Create the Azure IoT subsystem
- * 
+ *
  * @details This routine creates the Azure IoT subsystem. An internal thread is created to
  *          manage activities related to Azure IoT services. Only one NX_AZURE_IOT instance
  *          is needed to manage instances for Azure IoT hub, IoT Central, Device Provisioning
  *          Services (DPS), and Azure Security Center (ASC).
- * 
+ *
  * @param[in] nx_azure_iot_ptr A pointer to a #NX_AZURE_IOT
  * @param[in] name_ptr A pointer to a NULL-terminated string indicating the name of the Azure IoT instance.
  * @param[in] ip_ptr A pointer to a `NX_IP`, which is the IP stack used to connect to Azure IoT Services.
@@ -188,7 +213,7 @@ UINT nx_azure_iot_create(NX_AZURE_IOT *nx_azure_iot_ptr, UCHAR *name_ptr,
 /**
  * @brief Shutdown and cleanup the Azure IoT subsystem.
  * @details This routine stops all Azure services managed by this instance, and cleans up internal resources.
- * 
+ *
  * @param[in] nx_azure_iot_ptr A pointer to a #NX_AZURE_IOT.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS Successfully stopped Azure IoT services and cleaned up internal
@@ -198,7 +223,7 @@ UINT nx_azure_iot_delete(NX_AZURE_IOT *nx_azure_iot_ptr);
 
 /**
  * @brief Get unixtime
- * 
+ *
  * @param[in] nx_azure_iot_ptr A pointer to a #NX_AZURE_IOT.
  * @param[out] unix_time Pointer to `ULONG` where unixtime is returned.
  * @return A `UINT` with the result of the API.
@@ -208,7 +233,7 @@ UINT nx_azure_iot_unix_time_get(NX_AZURE_IOT *nx_azure_iot_ptr, ULONG *unix_time
 
 /**
  * @brief Allocate a buffer.
- * 
+ *
  * @param[in] nx_azure_iot_ptr A pointer to a #NX_AZURE_IOT.
  * @param[out] buffer_pptr A pointer to allocated buffer.
  * @param[out] buffer_size Size of allocated buffer.
@@ -221,7 +246,7 @@ UINT nx_azure_iot_buffer_allocate(NX_AZURE_IOT *nx_azure_iot_ptr, UCHAR **buffer
 
 /**
  * @brief Free allocated buffer
- * 
+ *
  * @param[in] buffer_context Context returned from the nx_azure_iot_buffer_allocate() API.
  * @return A `UINT` with the result of the API.
  *  @retval #NX_AZURE_IOT_SUCCESS Successfully deallocated buffer.
