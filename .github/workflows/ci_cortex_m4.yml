@@ -23,7 +23,6 @@ jobs:
     - name: Checkout sources recursively
       uses: actions/checkout@v2
       with:
-        token: ${{ secrets.REPO_SCOPED_TOKEN }}
         submodules: true
 
     # Store the arm compilers in the cache to speed up builds
