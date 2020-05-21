@@ -1,9 +1,9 @@
 ![cortex_m4](https://github.com/azure-rtos/azure-iot-preview/workflows/cortex_m4/badge.svg)
 ![cortex_m7](https://github.com/azure-rtos/azure-iot-preview/workflows/cortex_m7/badge.svg)
 
-# Azure IoT Clients
+# Azure RTOS SDK for Azure IoT
 
-Azure RTOS SDK for Azure IoT services.
+This repository contains SDK for Azure IoT services. SDK uses [ThreadX](https://github.com/azure-rtos/threadx) and [NetXDuo](https://github.com/azure-rtos/netxduo) to connect to Azure IoT.
 
 ## Documentation
 
@@ -56,7 +56,7 @@ The master branch has the most recent code with all new features and bug fixes. 
 
 ## Releases
 
-Each official release (preview or GA) will be tagged to mark the commit and published to the Github releases tab, e.g. `v6.0-rel`.
+Each official release (preview or GA) will be tagged to mark the commit and published to the Github releases tab, e.g. `v6.0_beta1`.
 
 ## Directory layout
 
@@ -76,8 +76,7 @@ Each official release (preview or GA) will be tagged to mark the commit and publ
 
 # Sample projects
 
-The following ZIP files can be downloaded from the Release associated with
-this repository:
+The following ZIP files can be downloaded from the [Release](https://github.com/azure-rtos/azure-iot-preview/releases) associated with this repository:
 
 * Azure_RTOS_6.0_ATSAME54-XPRO_IAR_Embedded_SDK_Sample_2020_05_20.zip
 * Azure_RTOS_6.0_ATSAME54-XPRO_MPLAB_Embedded_SDK_Sample_2020_05_20.zip
