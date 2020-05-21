@@ -1,3 +1,6 @@
+![cortex_m4](https://github.com/azure-rtos/azure-iot-preview/workflows/cortex_m4/badge.svg)
+![cortex_m7](https://github.com/azure-rtos/azure-iot-preview/workflows/cortex_m7/badge.svg)
+
 # Azure IoT Clients
 
 Azure RTOS SDK for Azure IoT services.
