@@ -14,8 +14,6 @@ Sample connects to the device in the IoTHub using Symmetric key. To register new
 #define DEVICE_ID                                   "<DeviceId from connection string>"
 #define DEVICE_SYMMETRIC_KEY                        "<SharedAccessKey from connection string>"
 
-/* Disable DPS */
-#define DISABLE_DPS_SAMPLE
 ```
 Above configuration by default enables all the features like: Telemetry, Cloud to device message and Direct Methods. To disable anyone, add following macro corresponding to the feature.
 
@@ -42,9 +40,6 @@ Sample connects to the device in the IoTHub using X509 cert. To register new dev
 #define DEVICE_CERT                                 {0x00, 0x00} /* your X509 cert der format hex values */
 #define DEVICE_PRIVATE_KEY                          {0x00, 0x00} /* your private key hex values */
 #define DEVICE_KEY_TYPE                             NX_SECURE_X509_KEY_TYPE_RSA_PKCS1_DER /* Right now only RSA certs are supported*/
-
-/* Disable DPS */
-#define DISABLE_DPS_SAMPLE
 
 ```
 
@@ -91,6 +86,9 @@ Note: To get the values, use the [doc](https://docs.microsoft.com/en-us/azure/io
 #define ID_SCOPE                                    "<ID Scope value from Provisioning service overview page>"
 #define REGISTRATION_ID                             "<RegistrationId provide when doing Individual registration>"
 #define DEVICE_SYMMETRIC_KEY                        "<Symmetric key from Individual registration detail page>"
+
+/* Enable DPS */
+#define ENABLE_DPS_SAMPLE
 ```
 
 ## Use Device Provisioning Service with X509
@@ -107,5 +105,8 @@ Note: To get the values, use the [doc](https://docs.microsoft.com/en-us/azure/io
 #define DEVICE_CERT                                 {0x00, 0x00} /* your X509 cert der format hex values */
 #define DEVICE_PRIVATE_KEY                          {0x00, 0x00} /* your private key hex values */
 #define DEVICE_KEY_TYPE                             NX_SECURE_X509_KEY_TYPE_RSA_PKCS1_DER /* Right now only RSA certs are supported*/
+
+/* Enable DPS */
+#define ENABLE_DPS_SAMPLE
 ```
 To generate self signed cert use the same steps mention in [IoTHub connect using X509 cert](#iothub-connect-using-x509-cert) section.
