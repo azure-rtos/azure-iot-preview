@@ -56,6 +56,7 @@ target_include_directories(${PROJECT_NAME}
     ${CMAKE_CURRENT_LIST_DIR}/azure-sdk-for-c/sdk/platform/noplatform/inc
 )
 
+target_compile_definitions(${PROJECT_NAME} PUBLIC "AZ_NO_PRECONDITION_CHECKING")
 
 # Define any required dependencies between this library and others
 target_link_libraries(${PROJECT_NAME} PUBLIC "azrtos::nx_cloud")
