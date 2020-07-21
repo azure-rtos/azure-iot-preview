@@ -9,7 +9,7 @@
 /*                                                                        */
 /**************************************************************************/
 
-/* Version: 6.0 Preview */
+/* Version: 6.0 Preview 2 */
 
 /**
  * @file nx_azure_iot_provisioning_client.h
@@ -27,7 +27,7 @@
 extern   "C" {
 #endif
 
-#include "az_iot_provisioning_client.h"
+#include "azure/iot/az_iot_provisioning_client.h"
 #include "nx_azure_iot.h"
 #include "nx_api.h"
 #include "nxd_mqtt_client.h"
@@ -131,6 +131,9 @@ typedef struct NX_AZURE_IOT_PROVISIONING_CLIENT_STRUCT
  * @param[in] trusted_certificate A pointer to `NX_SECURE_X509_CERT`, which are the server side certs.
  * @return A `UINT` with the result of the API.
  *  @retval #NX_AZURE_IOT_SUCCESS Successfully initialized to Azure IoT Provisioning Client.
+ *  @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to initialize the Azure IoT Provisioning Client due to invalid parameter.
+ *  @retval #NX_AZURE_IOT_SDK_CORE_ERROR Fail to initialize the Azure IoT Provisioning Client due to SDK core error.
+ *  @retval #NX_AZURE_IOT_INSUFFICIENT_BUFFER_SPACE Fail to initialize the Azure IoT Provisioning Client due to buffer size is too small.
  */
 UINT nx_azure_iot_provisioning_client_initialize(NX_AZURE_IOT_PROVISIONING_CLIENT *prov_client_ptr,
                                                  NX_AZURE_IOT *nx_azure_iot_ptr,
@@ -149,6 +152,8 @@ UINT nx_azure_iot_provisioning_client_initialize(NX_AZURE_IOT_PROVISIONING_CLIEN
  * @param[in] prov_client_ptr A pointer to a #NX_AZURE_IOT_PROVISIONING_CLIENT.
  * @return A `UINT` with the result of the API.
  *  @retval #NX_AZURE_IOT_SUCCESS Successfully cleaned up AZ IoT Provisioning Client Instance.
+ *  @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to deinitialize the AZ IoT Provisioning Client Instance due to invalid parameter.
+ *  @retval #NX_AZURE_IOT_NOT_FOUND Fail to deinitialize the AZ IoT Provisioning Client Instance due to resource not found.
  */
 UINT nx_azure_iot_provisioning_client_deinitialize(NX_AZURE_IOT_PROVISIONING_CLIENT *prov_client_ptr);
 
@@ -159,7 +164,8 @@ UINT nx_azure_iot_provisioning_client_deinitialize(NX_AZURE_IOT_PROVISIONING_CLI
  * @param[in] prov_client_ptr A pointer to a #NX_AZURE_IOT_PROVISIONING_CLIENT.
  * @param[in] x509_cert A pointer to a `NX_SECURE_X509_CERT` client cert.
  * @return A `UINT` with the result of the API.
- *  @retval #NX_AZURE_IOT_SUCCESS Successfully add device certs to AZ IoT Provisioning Client Instance.
+ *  @retval #NX_AZURE_IOT_SUCCESS Successfully set device certs to AZ IoT Provisioning Client Instance.
+ *  @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to set device certs to AZ IoT Provisioning Client Instance due to invalid parameter.
  */
 UINT nx_azure_iot_provisioning_client_device_cert_set(NX_AZURE_IOT_PROVISIONING_CLIENT *prov_client_ptr,
                                                       NX_SECURE_X509_CERT *x509_cert);
@@ -173,6 +179,7 @@ UINT nx_azure_iot_provisioning_client_device_cert_set(NX_AZURE_IOT_PROVISIONING_
  * @param[in] symmetric_key_length Length of symmetric key.
  * @return A `UINT` with the result of the API.
  *  @retval #NX_AZURE_IOT_SUCCESS Successfully set symmetric key to the IoT Provisioning client.
+ *  @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to set symmetric key to AZ IoT Provisioning Client Instance due to invalid parameter.
  */
 UINT nx_azure_iot_provisioning_client_symmetric_key_set(NX_AZURE_IOT_PROVISIONING_CLIENT *prov_client_ptr,
                                                         UCHAR *symmetric_key, UINT symmetric_key_length);
@@ -186,6 +193,20 @@ UINT nx_azure_iot_provisioning_client_symmetric_key_set(NX_AZURE_IOT_PROVISIONIN
  * @return A `UINT` with the result of the API.
  *  @retval #NX_AZURE_IOT_SUCCESS Successfully register device to AZ IoT Provisioning.
  *  @retval #NX_AZURE_IOT_PENDING Successfully started registration of device but not yet completed.
+ *  @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to register device to AZ IoT Provisioning due to invalid parameter.
+ *  @retval #NX_AZURE_IOT_SDK_CORE_ERROR Fail to register device to AZ IoT Provisioning due to SDK core error.
+ *  @retval #NX_AZURE_IOT_SERVER_RESPONSE_ERROR Fail to register device to AZ IoT Provisioning due to error response from server.
+ *  @retval #NX_AZURE_IOT_DISCONNECTED Fail to register device to AZ IoT Provisioning due to disconnection.
+ *  @retval NX_DNS_QUERY_FAILED Fail to register device to AZ IoT Provisioning due to hostname can not be resolved.
+ *  @retval NX_NO_PACKET Fail to register device to AZ IoT Provisioning due to no available packet in pool.
+ *  @retval NX_INVALID_PARAMETERS Fail to register device to AZ IoT Provisioning due to invalid parameters.
+ *  @retval NX_SECURE_TLS_INSUFFICIENT_METADATA_SPACE Fail to register device to AZ IoT Provisioning due to insufficient metadata space.
+ *  @retval NX_SECURE_TLS_UNSUPPORTED_CIPHER Fail to register device to AZ IoT Provisioning due to unsupported cipher.
+ *  @retval NXD_MQTT_ALREADY_CONNECTED Fail to register device to AZ IoT Provisioning due to MQTT session is not disconnected.
+ *  @retval NXD_MQTT_CONNECT_FAILURE Fail to register device to AZ IoT Provisioning due to TCP/TLS connect error.
+ *  @retval NXD_MQTT_COMMUNICATION_FAILURE Fail to register device to AZ IoT Provisioning due to MQTT connect error.
+ *  @retval NXD_MQTT_ERROR_SERVER_UNAVAILABLE Fail to register device to AZ IoT Provisioning due to server unavailable.
+ *  @retval NXD_MQTT_ERROR_NOT_AUTHORIZED Fail to register device to AZ IoT Provisioning due to authentication error.
  */
 UINT nx_azure_iot_provisioning_client_register(NX_AZURE_IOT_PROVISIONING_CLIENT *prov_client_ptr, UINT wait_option);
 
@@ -197,6 +218,7 @@ UINT nx_azure_iot_provisioning_client_register(NX_AZURE_IOT_PROVISIONING_CLIENT 
  * @param[in] on_complete_callback Registration completion callback.
  * @return A `UINT` with the result of the API.
  *  @retval #NX_AZURE_IOT_SUCCESS Successful register completion callback.
+ *  @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to register completion callback due to invalid parameter.
  */
 UINT nx_azure_iot_provisioning_client_completion_callback_set(NX_AZURE_IOT_PROVISIONING_CLIENT *prov_client_ptr,
                                                               VOID (*on_complete_callback)(
@@ -215,6 +237,9 @@ UINT nx_azure_iot_provisioning_client_completion_callback_set(NX_AZURE_IOT_PROVI
  * @param[in/out] device_id_len Pointer to UINT that contains size of buffer supplied, once successfully return it contains bytes copied to buffer.
  * @return A `UINT` with the result of the API.
  *  @retval #NX_AZURE_IOT_SUCCESS The device info is successfully retrieved to user supplied buffers.
+ *  @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to retrieve device info due to invalid parameter.
+ *  @retval #NX_AZURE_IOT_WRONG_STATE Fail to retrieve device info due to wrong state.
+ *  @retval #NX_AZURE_IOT_INSUFFICIENT_BUFFER_SPACE Fail to retrieve device info due to buffer size is too small.
  */
 UINT nx_azure_iot_provisioning_client_iothub_device_info_get(NX_AZURE_IOT_PROVISIONING_CLIENT *prov_client_ptr,
                                                              UCHAR *iothub_hostname, UINT *iothub_hostname_len,

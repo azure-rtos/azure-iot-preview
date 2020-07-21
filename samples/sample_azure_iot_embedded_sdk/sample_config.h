@@ -82,7 +82,7 @@ TODO`s: Configure core settings of application for your IoTHub.
 #define REGISTRATION_ID                             ""
 #endif /* REGISTRATION_ID */
 
-#endif /* DISABLE_DPS_SAMPLE */
+#endif /* ENABLE_DPS_SAMPLE */
 
 /* Optional SYMMETRIC KEY.  */
 #ifndef DEVICE_SYMMETRIC_KEY
@@ -98,16 +98,6 @@ TODO`s: Configure core settings of application for your IoTHub.
 
 /* Using X509 certificate authenticate to connect to IoT Hub,
    set the device certificate as your device.  */
-
-/* Device certificate. */
-#ifndef DEVICE_CERT
-#define DEVICE_CERT                                 {0x00}
-#endif /* DEVICE_CERT */
-
-/* Device Private Key. */
-#ifndef DEVICE_PRIVATE_KEY
-#define DEVICE_PRIVATE_KEY                          {0x00}
-#endif /* DEVICE_PRIVATE_KEY */
 
 /* Device Key type. */
 #ifndef DEVICE_KEY_TYPE
@@ -126,7 +116,7 @@ END TODO section
 #endif /* NX_AZURE_IOT_STACK_SIZE */
 
 #ifndef NX_AZURE_IOT_THREAD_PRIORITY
-#define NX_AZURE_IOT_THREAD_PRIORITY                (3)
+#define NX_AZURE_IOT_THREAD_PRIORITY                (4)
 #endif /* NX_AZURE_IOT_THREAD_PRIORITY */
 
 #ifndef SAMPLE_MAX_BUFFER

@@ -9,7 +9,7 @@
 /*                                                                        */
 /**************************************************************************/
 
-/* Version: 6.0 Preview */
+/* Version: 6.0 Preview 2 */
 
 /**
  * @file nx_azure_iot.h
@@ -23,6 +23,7 @@
 extern   "C" {
 #endif
 
+#include "azure/core/az_log.h"
 #include "nx_api.h"
 #include "nx_cloud.h"
 #include "nxd_dns.h"
@@ -41,33 +42,25 @@ extern   "C" {
 #define NX_AZURE_IOT_LOG_LEVEL    2
 #endif /* NX_AZURE_IOT_LOG_LEVEL */
 
-/* Define the log function.  */
-#ifndef NX_AZURE_IOT_LOG
-#define NX_AZURE_IOT_LOG          printf
-#endif /* NX_AZURE_IOT_LOG */
-
 /* Define the az iot log function. */
 #define LogError(...)
 #define LogInfo(...)
 #define LogDebug(...)
-#define LogOutput(type,...) {\
-                                NX_AZURE_IOT_LOG("[" type "]");\
-                                NX_AZURE_IOT_LOG( __VA_ARGS__);\
-                                NX_AZURE_IOT_LOG("\r\n");\
-                            }
+#define LogLiteralArgs(s) (UCHAR *)s, sizeof(s) - 1
+
+UINT nx_azure_iot_log(UCHAR *type_ptr, UINT type_len, UCHAR *msg_ptr, UINT msg_len, ...);
 
 #if NX_AZURE_IOT_LOG_LEVEL > 0
-#include <stdio.h>
 #undef LogError
-#define LogError(...) LogOutput("ERROR", __VA_ARGS__)
+#define LogError(...) nx_azure_iot_log(LogLiteralArgs("[ERROR] "), ##__VA_ARGS__)
 #endif /* NX_AZURE_IOT_LOG_LEVEL > 0 */
 #if NX_AZURE_IOT_LOG_LEVEL > 1
 #undef LogInfo
-#define LogInfo(...) LogOutput("INFO", __VA_ARGS__)
+#define LogInfo(...) nx_azure_iot_log(LogLiteralArgs("[INFO] "), ##__VA_ARGS__)
 #endif /* NX_AZURE_IOT_LOG_LEVEL > 1 */
 #if NX_AZURE_IOT_LOG_LEVEL > 2
 #undef LogDebug
-#define LogDebug(...) LogOutput("DEBUG", __VA_ARGS__)
+#define LogDebug(...) nx_azure_iot_log(LogLiteralArgs("[DEBUG] "), ##__VA_ARGS__)
 #endif /* NX_AZURE_IOT_LOG_LEVEL > 2 */
 
 #define NX_AZURE_IOT_MQTT_QOS_0                           0
@@ -117,6 +110,8 @@ extern   "C" {
 #define NX_AZURE_IOT_MESSAGE_TOO_LONG                     0x20010
 #define NX_AZURE_IOT_NO_AVAILABLE_CIPHER                  0x20011
 #define NX_AZURE_IOT_WRONG_STATE                          0x20012
+#define NX_AZURE_IOT_DELETE_ERROR                         0x20013
+#define NX_AZURE_IOT_NO_SUBSCRIBE_ACK                     0x20014
 
 
 /* Resource type managed by AZ_IOT.  */
@@ -133,6 +128,9 @@ extern   "C" {
 #ifndef NX_AZURE_IOT_MQTT_KEEP_ALIVE
 #define NX_AZURE_IOT_MQTT_KEEP_ALIVE                      (60 * 4)
 #endif /* NX_AZURE_IOT_MQTT_KEEP_ALIVE */
+
+/* MQTT Subscribe topic offset.  */
+#define NX_AZURE_IOT_MQTT_SUBSCRIBE_TOPIC_OFFSET          6
 
 /**
  * @brief Resource struct
@@ -204,6 +202,10 @@ typedef struct NX_AZURE_IOT_STRUCT
  * @param[in] unix_time_callback Callback to fetch unix time from platform.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS Successfully created the Azure IoT instance.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to create the Azure IoT instance due to invalid parameter.
+ *   @retval NX_OPTION_ERROR Fail to create the Azure IoT instance due to invalid priority.
+ *   @retval NX_PTR_ERROR Fail to create the Azure IoT instance due to invalid parameter.
+ *   @retval NX_SIZE_ERROR Fail to create the Azure IoT instance due to insufficient size of stack memory.
  */
 UINT nx_azure_iot_create(NX_AZURE_IOT *nx_azure_iot_ptr, UCHAR *name_ptr,
                          NX_IP *ip_ptr, NX_PACKET_POOL *pool_ptr, NX_DNS *dns_ptr,
@@ -218,6 +220,8 @@ UINT nx_azure_iot_create(NX_AZURE_IOT *nx_azure_iot_ptr, UCHAR *name_ptr,
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS Successfully stopped Azure IoT services and cleaned up internal
  *                                    resources instance.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to delete the Azure IoT instance due to invalid parameter.
+ *   @retval #NX_AZURE_IOT_DELETE_ERROR Fail to delete the Azure IoT instance due to resource is still in use.
  */
 UINT nx_azure_iot_delete(NX_AZURE_IOT *nx_azure_iot_ptr);
 
@@ -228,32 +232,30 @@ UINT nx_azure_iot_delete(NX_AZURE_IOT *nx_azure_iot_ptr);
  * @param[out] unix_time Pointer to `ULONG` where unixtime is returned.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS Successfully return unix time.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to get unix time due to invalid parameter.
  */
 UINT nx_azure_iot_unix_time_get(NX_AZURE_IOT *nx_azure_iot_ptr, ULONG *unix_time);
 
 /**
- * @brief Allocate a buffer.
- *
- * @param[in] nx_azure_iot_ptr A pointer to a #NX_AZURE_IOT.
- * @param[out] buffer_pptr A pointer to allocated buffer.
- * @param[out] buffer_size Size of allocated buffer.
- * @param[out] buffer_context Context returned for allocated buffer.
- * @return A `UINT` with the result of the API.
- *  @retval #NX_AZURE_IOT_SUCCESS Successfully allocated buffer.
+ * @brief Initialize logging
+ * 
+ * @details This routine initialized the logging with customer specific callback to output the logs for different
+ *          classifications:
+ *          - AZ_LOG_IOT_AZURERTOS,
+ *          - AZ_LOG_MQTT_RECEIVED_TOPIC,
+ *          - AZ_LOG_MQTT_RECEIVED_PAYLOAD,
+ *          - AZ_LOG_IOT_RETRY,
+ *          - AZ_LOG_IOT_SAS_TOKEN
+ * 
+ * @param[in] log_callback A pointer to a callback.
+ * 
  */
-UINT nx_azure_iot_buffer_allocate(NX_AZURE_IOT *nx_azure_iot_ptr, UCHAR **buffer_pptr,
-                                  UINT *buffer_size, VOID **buffer_context);
-
-/**
- * @brief Free allocated buffer
- *
- * @param[in] buffer_context Context returned from the nx_azure_iot_buffer_allocate() API.
- * @return A `UINT` with the result of the API.
- *  @retval #NX_AZURE_IOT_SUCCESS Successfully deallocated buffer.
- */
-UINT nx_azure_iot_buffer_free(VOID *buffer_context);
+VOID nx_azure_iot_log_init(VOID(*log_callback)(az_log_classification classification, UCHAR *msg, UINT msg_len));
 
 /* Internal APIs. */
+UINT nx_azure_iot_buffer_allocate(NX_AZURE_IOT *nx_azure_iot_ptr, UCHAR **buffer_pptr,
+                                  UINT *buffer_size, VOID **buffer_context);
+UINT nx_azure_iot_buffer_free(VOID *buffer_context);
 UINT nx_azure_iot_resource_add(NX_AZURE_IOT *nx_azure_iot_ptr, NX_AZURE_IOT_RESOURCE *resource);
 UINT nx_azure_iot_resource_remove(NX_AZURE_IOT *nx_azure_iot_ptr, NX_AZURE_IOT_RESOURCE *resource);
 NX_AZURE_IOT_RESOURCE *nx_azure_iot_resource_search(NXD_MQTT_CLIENT *client_ptr);
@@ -266,11 +268,11 @@ VOID nx_azure_iot_mqtt_packet_adjust(NX_PACKET *packet_ptr);
 UINT nx_azure_iot_mqtt_tls_setup(NXD_MQTT_CLIENT *client_ptr, NX_SECURE_TLS_SESSION *tls_session,
                                  NX_SECURE_X509_CERT *certificate,
                                  NX_SECURE_X509_CERT *trusted_certificate);
-UINT nx_azure_iot_url_encoded_hmac_sha256_calculate(NX_AZURE_IOT_RESOURCE *resource_ptr,
-                                                    UCHAR *key_ptr, UINT key_size,
-                                                    UCHAR *message_ptr, UINT message_size,
-                                                    UCHAR *buffer_ptr, UINT buffer_len,
-                                                    UCHAR **output_ptr, UINT *output_len);
+UINT nx_azure_iot_base64_hmac_sha256_calculate(NX_AZURE_IOT_RESOURCE *resource_ptr,
+                                               UCHAR *key_ptr, UINT key_size,
+                                               UCHAR *message_ptr, UINT message_size,
+                                               UCHAR *buffer_ptr, UINT buffer_len,
+                                               UCHAR **output_ptr, UINT *output_len_ptr);
 
 
 #ifdef __cplusplus

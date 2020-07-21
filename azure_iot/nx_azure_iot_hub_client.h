@@ -9,7 +9,7 @@
 /*                                                                        */
 /**************************************************************************/
 
-/* Version: 6.0 Preview */
+/* Version: 6.0 Preview 2 */
 
 /**
  * @file nx_azure_iot_hub_client.h
@@ -27,7 +27,7 @@
 extern   "C" {
 #endif
 
-#include "az_iot_hub_client.h"
+#include "azure/iot/az_iot_hub_client.h"
 #include "nx_azure_iot.h"
 #include "nx_api.h"
 #include "nx_cloud.h"
@@ -75,6 +75,10 @@ extern   "C" {
 /**< The client is connected */
 #define NX_AZURE_IOT_HUB_CLIENT_STATUS_CONNECTED        2
 
+/* Default TELEMETRY QoS is QoS1 */
+#ifndef NX_AZURE_IOT_HUB_CLIENT_TELEMETRY_QOS
+#define NX_AZURE_IOT_HUB_CLIENT_TELEMETRY_QOS           NX_AZURE_IOT_MQTT_QOS_1
+#endif /* NX_AZURE_IOT_HUB_CLIENT_TELEMETRY_QOS */
 
 typedef struct NX_AZURE_IOT_THREAD_STRUCT
 {
@@ -97,6 +101,7 @@ typedef struct NX_AZURE_IOT_HUB_CLIENT_RECEIVE_MESSAGE_STRUCT
     VOID         *message_callback_args;
     UINT        (*message_process)(struct NX_AZURE_IOT_HUB_CLIENT_STRUCT *hub_client_ptr,
                                    NX_PACKET *packet_ptr, ULONG topic_offset, USHORT topic_length);
+    UINT        (*message_enable)(struct NX_AZURE_IOT_HUB_CLIENT_STRUCT *hub_client_ptr);
 } NX_AZURE_IOT_HUB_CLIENT_RECEIVE_MESSAGE;
 
 /**
@@ -131,6 +136,9 @@ typedef struct NX_AZURE_IOT_HUB_CLIENT_STRUCT
     UINT                                    nx_azure_iot_hub_client_symmetric_key_length;
     NX_AZURE_IOT_RESOURCE                   nx_azure_iot_hub_client_resource;
 
+    volatile UCHAR                          nx_azure_iot_hub_client_device_twin_response_subscribe_ack;
+    UCHAR                                   reserved[3];
+
     az_iot_hub_client                       iot_hub_client_core;
 } NX_AZURE_IOT_HUB_CLIENT;
 
@@ -155,6 +163,8 @@ typedef struct NX_AZURE_IOT_HUB_CLIENT_STRUCT
  * @param[in] trusted_certificate A pointer to `NX_SECURE_X509_CERT`, which are the server side certs.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS Successfully initialized the Azure IoT hub client.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to initialize the Azure IoT hub client due to invalid parameter.
+ *   @retval #NX_AZURE_IOT_SDK_CORE_ERROR Fail to initialize the Azure IoT hub client due to SDK core error.
  */
 UINT nx_azure_iot_hub_client_initialize(NX_AZURE_IOT_HUB_CLIENT* hub_client_ptr,
                                         NX_AZURE_IOT *nx_azure_iot_ptr,
@@ -172,6 +182,7 @@ UINT nx_azure_iot_hub_client_initialize(NX_AZURE_IOT_HUB_CLIENT* hub_client_ptr,
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS Successfully de-initialized the Azure IoT hub client.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to deinitialize the Azure IoT hub client due to invalid parameter.
  */
 UINT nx_azure_iot_hub_client_deinitialize(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr);
 
@@ -181,7 +192,8 @@ UINT nx_azure_iot_hub_client_deinitialize(NX_AZURE_IOT_HUB_CLIENT *hub_client_pt
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
  * @param[in] device_certificate A pointer to a `NX_SECURE_X509_CERT`, which is the device certificate.
  * @return A `UINT` with the result of the API.
- *   @retval #NX_AZURE_IOT_SUCCESS Successfully added device certificate to AZ IoT Hub Instance.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successfully set device certificate to AZ IoT Hub Instance.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to set device certificate to AZ IoT Hub Instance due to invalid parameter.
  */
 UINT nx_azure_iot_hub_client_device_cert_set(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                              NX_SECURE_X509_CERT *device_certificate);
@@ -194,9 +206,25 @@ UINT nx_azure_iot_hub_client_device_cert_set(NX_AZURE_IOT_HUB_CLIENT *hub_client
  * @param[in] symmetric_key_length Length of `symmetric_key`.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS Successfully set symmetric key to IoTHub client.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to set symmetric key to IoTHub client due to invalid parameter.
  */
 UINT nx_azure_iot_hub_client_symmetric_key_set(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                                UCHAR *symmetric_key, UINT symmetric_key_length);
+
+/**
+ * @brief Set Device Twin model id in the IoT Hub client.
+ *
+ * @warning THIS FUNCTION IS TEMPORARY. IT IS SUBJECT TO CHANGE OR BE REMOVED IN THE FUTURE.
+ *
+ * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
+ * @param[in] model_id_ptr A pointer to a model id.
+ * @param[in] model_id_length Length of `model id`.
+ * @return A `UINT` with the result of the API.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successfully set model id to IoTHub client.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to set model id to IoTHub client due to invalid parameter.
+ */
+UINT nx_azure_iot_hub_client_model_id_set(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
+                                          UCHAR *model_id_ptr, UINT model_id_length);
 
 /**
  * @brief Connect to IoT Hub.
@@ -206,6 +234,21 @@ UINT nx_azure_iot_hub_client_symmetric_key_set(NX_AZURE_IOT_HUB_CLIENT *hub_clie
  * @param[in] wait_option Number of ticks to wait for internal resources to be available.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS  Successful if connected to Azure IoT Hub.
+ *   @retval #NX_AZURE_IOT_CONNECTING Successfully started connection but not yet completed.
+ *   @retval #NX_AZURE_IOT_ALREADY_CONNECTED Already connected to Azure IoT Hub.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to connect to Azure IoT Hub due to invalid parameter.
+ *   @retval #NX_AZURE_IOT_SDK_CORE_ERROR Fail to connect to Azure IoT Hub due to SDK core error.
+ *   @retval #NX_AZURE_IOT_INSUFFICIENT_BUFFER_SPACE Fail to connect to Azure IoT Hub due to buffer size is too small.
+ *   @retval NX_DNS_QUERY_FAILED Fail to connect to Azure IoT Hub due to hostname can not be resolved.
+ *   @retval NX_NO_PACKET Fail to connect to Azure IoT Hub due to no available packet in pool.
+ *   @retval NX_INVALID_PARAMETERS Fail to connect to Azure IoT Hub due to invalid parameters.
+ *   @retval NX_SECURE_TLS_INSUFFICIENT_METADATA_SPACE Fail to connect to Azure IoT Hub due to insufficient metadata space.
+ *   @retval NX_SECURE_TLS_UNSUPPORTED_CIPHER Fail to connect to Azure IoT Hub due to unsupported cipher.
+ *   @retval NXD_MQTT_ALREADY_CONNECTED Fail to connect to Azure IoT Hub due to MQTT session is not disconnected.
+ *   @retval NXD_MQTT_CONNECT_FAILURE Fail to connect to Azure IoT Hub due to TCP/TLS connect error.
+ *   @retval NXD_MQTT_COMMUNICATION_FAILURE Fail to connect to Azure IoT Hub due to MQTT connect error.
+ *   @retval NXD_MQTT_ERROR_SERVER_UNAVAILABLE Fail to connect to Azure IoT Hub due to server unavailable.
+ *   @retval NXD_MQTT_ERROR_NOT_AUTHORIZED Fail to connect to Azure IoT Hub due to authentication error.
  */
 UINT nx_azure_iot_hub_client_connect(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                      UINT clean_session, UINT wait_option);
@@ -216,6 +259,7 @@ UINT nx_azure_iot_hub_client_connect(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS  Successful if client disconnects.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to disconnect due to invalid parameter.
  */
 UINT nx_azure_iot_hub_client_disconnect(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr);
 
@@ -225,9 +269,14 @@ UINT nx_azure_iot_hub_client_disconnect(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr)
  *          invoked when IoT Hub status is changed, such as when the client is connected to IoT Hub.
  *          The different statuses include:
  *
- *          - #NX_AZURE_IOT_HUB_CLIENT_STATUS_NOT_CONNECTED
- *          - #NX_AZURE_IOT_HUB_CLIENT_STATUS_CONNECTING
- *          - #NX_AZURE_IOT_HUB_CLIENT_STATUS_CONNECTED
+ *          - #NX_AZURE_IOT_SUCCESS
+ *          - NX_SECURE_TLS_ALERT_RECEIVED
+ *          - NX_SECURE_TLS_NO_SUPPORTED_CIPHERS
+ *          - NX_SECURE_X509_CHAIN_VERIFY_FAILURE
+ *          - NXD_MQTT_CONNECT_FAILURE
+ *          - NXD_MQTT_ERROR_SERVER_UNAVAILABLE
+ *          - NXD_MQTT_ERROR_NOT_AUTHORIZED
+ *          - NX_AZURE_IOT_DISCONNECTED
  *
  *          Setting the callback function to `NULL` disables the callback function.
  *
@@ -235,6 +284,7 @@ UINT nx_azure_iot_hub_client_disconnect(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr)
  * @param[in] connection_status_cb Pointer to a callback function invoked on connection status is changed.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS  Successful if connection status callback is set.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to set connection status callback due to invalid parameter.
  */
 UINT nx_azure_iot_hub_client_connection_status_callback_set(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                                             VOID (*connection_status_cb)(
@@ -257,7 +307,9 @@ UINT nx_azure_iot_hub_client_connection_status_callback_set(NX_AZURE_IOT_HUB_CLI
  * @param[in] callback_ptr Pointer to a callback function invoked if the specified message type is received.
  * @param[in] callback_args Pointer to an argument passed to callback function.
  * @return A `UINT` with the result of the API.
- *   @retval #NX_AZURE_IOT_SUCCESS if callback function is set successfully.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successful if callback function is set.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to set receive callback due to invalid parameter.
+ *   @retval #NX_AZURE_IOT_NOT_SUPPORTED Fail to set receive callback due to message_type not supported.
  */
 UINT nx_azure_iot_hub_client_receive_callback_set(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                                   UINT message_type,
@@ -269,13 +321,16 @@ UINT nx_azure_iot_hub_client_receive_callback_set(NX_AZURE_IOT_HUB_CLIENT *hub_c
 /**
  * @brief Creates telemetry message.
  * @details This routine prepares a packet for sending telemetry data. After the packet is properly created,
- *          application can add additional user-defined properties before sending out.
+ *          application owns the `NX_PACKET` and can add additional user-defined properties before sending out.
  *
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
- * @param[out] packet_pptr Returned allocated `NX_PACKET` on success.
+ * @param[out] packet_pptr Returned allocated `NX_PACKET` on success. Caller owns the `NX_PACKET` memory.
  * @param[in] wait_option Ticks to wait if no packet is available.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS Successful if a packet is allocated.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to allocate telemetry message due to invalid parameter.
+ *   @retval #NX_AZURE_IOT_SDK_CORE_ERROR Fail to allocate telemetry message due to SDK core error.
+ *   @retval NX_NO_PACKET Fail to allocate telemetry message due to no available packet in pool.
  */
 UINT nx_azure_iot_hub_client_telemetry_message_create(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                                       NX_PACKET **packet_pptr,
@@ -306,6 +361,8 @@ UINT nx_azure_iot_hub_client_telemetry_message_delete(NX_PACKET *packet_ptr);
  * @param[in] wait_option Ticks to wait if packet needs to be expanded.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS Successful if property is added.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to add property due to invalid parameter.
+ *   @retval NX_NO_PACKET Fail to add property due to no available packet in pool.
  */
 UINT nx_azure_iot_hub_client_telemetry_property_add(NX_PACKET *packet_ptr,
                                                     UCHAR *property_name, USHORT property_name_length,
@@ -315,6 +372,7 @@ UINT nx_azure_iot_hub_client_telemetry_property_add(NX_PACKET *packet_ptr,
 /**
  * @brief Sends telemetry message to IoTHub.
  * @details This routine sends telemetry to IoTHub, with `packet_ptr` containing all the properties.
+ *          On successful return of this function, ownership of `NX_PACKET` is released.
  *
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
  * @param[in] packet_ptr A pointer to telemetry property packet.
@@ -323,6 +381,11 @@ UINT nx_azure_iot_hub_client_telemetry_property_add(NX_PACKET *packet_ptr,
  * @param[in] wait_option Ticks to wait for message to be sent.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS Successful if telemetry message is sent out.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to send telemetry message due to invalid parameter.
+ *   @retval #NX_AZURE_IOT_INVALID_PACKET Fail to send telemetry message due to packet is invalid.
+ *   @retval NXD_MQTT_PACKET_POOL_FAILURE Fail to send telemetry message due to no available packet in pool.
+ *   @retval NXD_MQTT_COMMUNICATION_FAILURE Fail to send telemetry message due to TCP/TLS error.
+ *   @retval NX_NO_PACKET Fail to send telemetry message due to no available packet in pool.
  */
 UINT nx_azure_iot_hub_client_telemetry_send(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr, NX_PACKET *packet_ptr,
                                             UCHAR *telemetry_data, UINT data_size, UINT wait_option);
@@ -333,6 +396,10 @@ UINT nx_azure_iot_hub_client_telemetry_send(NX_AZURE_IOT_HUB_CLIENT *hub_client_
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS  Successful if C2D message receiving is enabled.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to enable C2D message receiving due to invalid parameter.
+ *   @retval NXD_MQTT_NOT_CONNECTED Fail to enable C2D message receiving due to MQTT not connected.
+ *   @retval NXD_MQTT_PACKET_POOL_FAILURE Fail to enable C2D message receiving due to no available packet in pool.
+ *   @retval NXD_MQTT_COMMUNICATION_FAILURE Fail to enable C2D message receiving due to TCP/TLS error.
  */
 UINT nx_azure_iot_hub_client_cloud_message_enable(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr);
 
@@ -342,6 +409,10 @@ UINT nx_azure_iot_hub_client_cloud_message_enable(NX_AZURE_IOT_HUB_CLIENT *hub_c
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS  Successful if C2D message receiving is disabled.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to disable C2D message receiving due to invalid parameter.
+ *   @retval NXD_MQTT_NOT_CONNECTED Fail to disable C2D message receiving due to MQTT not connected.
+ *   @retval NXD_MQTT_PACKET_POOL_FAILURE Fail to disable C2D message receiving due to no available packet in pool.
+ *   @retval NXD_MQTT_COMMUNICATION_FAILURE Fail to disable C2D message receiving due to TCP/TLS error.
  */
 UINT nx_azure_iot_hub_client_cloud_message_disable(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr);
 
@@ -352,10 +423,14 @@ UINT nx_azure_iot_hub_client_cloud_message_disable(NX_AZURE_IOT_HUB_CLIENT *hub_
  *          by the `wait_option` parameter.
  *
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
- * @param[out] packet_pptr Return a `NX_PACKET` pointer with C2D message on success.
+ * @param[out] packet_pptr Return a `NX_PACKET` pointer with C2D message on success. Caller owns the `NX_PACKET` memory.
  * @param[in] wait_option Ticks to wait for message to arrive.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS  Successful if C2D message is received.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to receive C2D message due to invalid parameter.
+ *   @retval #NX_AZURE_IOT_NOT_ENABLED Fail to receive C2D message due to it is not enabled.
+ *   @retval #NX_AZURE_IOT_NO_PACKET Fail to receive C2D message due to timeout.
+ *   @retval #NX_AZURE_IOT_DISCONNECTED Fail to receive C2D message due to disconnection.
  */
 UINT nx_azure_iot_hub_client_cloud_message_receive(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                                    NX_PACKET **packet_pptr, UINT wait_option);
@@ -371,7 +446,10 @@ UINT nx_azure_iot_hub_client_cloud_message_receive(NX_AZURE_IOT_HUB_CLIENT *hub_
  * @param[out] property_value_length A `USHORT` pointer to size of `property_value`.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS Successful if property is found and copied successfully into user buffer.
- *   @retval #NX_AZURE_IOT_NOT_FOUND If property is not found.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to find the property due to invalid parameter.
+ *   @retval #NX_AZURE_IOT_INVALID_PACKET Fail to find the property due to the packet is invalid.
+ *   @retval #NX_AZURE_IOT_NOT_FOUND Property is not found.
+ *   @retval #NX_AZURE_IOT_SDK_CORE_ERROR Fail to find the property due to parsing error.
  */
 UINT nx_azure_iot_hub_client_cloud_message_property_get(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                                         NX_PACKET *packet_ptr, UCHAR *property_name,
@@ -385,6 +463,10 @@ UINT nx_azure_iot_hub_client_cloud_message_property_get(NX_AZURE_IOT_HUB_CLIENT 
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS Successful if device twin feature is enabled.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to enable device twin feature due to invalid parameter.
+ *   @retval NXD_MQTT_NOT_CONNECTED Fail to enable device twin feature due to MQTT not connected.
+ *   @retval NXD_MQTT_PACKET_POOL_FAILURE Fail to enable device twin feature due to no available packet in pool.
+ *   @retval NXD_MQTT_COMMUNICATION_FAILURE Fail to enable device twin feature due to TCP/TLS error.
  */
 UINT nx_azure_iot_hub_client_device_twin_enable(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr);
 
@@ -395,6 +477,10 @@ UINT nx_azure_iot_hub_client_device_twin_enable(NX_AZURE_IOT_HUB_CLIENT *hub_cli
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS Successful if device twin feature is disabled.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to disable device twin feature due to invalid parameter.
+ *   @retval NXD_MQTT_NOT_CONNECTED Fail to disable device twin feature due to MQTT not connected.
+ *   @retval NXD_MQTT_PACKET_POOL_FAILURE Fail to disable device twin feature due to no available packet in pool.
+ *   @retval NXD_MQTT_COMMUNICATION_FAILURE Fail to disable device twin feature due to TCP/TLS error.
  */
 UINT nx_azure_iot_hub_client_device_twin_disable(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr);
 
@@ -409,7 +495,8 @@ UINT nx_azure_iot_hub_client_device_twin_disable(NX_AZURE_IOT_HUB_CLIENT *hub_cl
  * @param[in] callback_ptr Pointer to a callback function invoked.
  * @param[in] callback_args Pointer to an argument passed to callback function.
  * @return A `UINT` with the result of the API.
- *   @retval #NX_AZURE_IOT_SUCCESS Successful if callback function is set successfully.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successful if callback function is set.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to disable device twin feature due to invalid parameter.
  */
 UINT nx_azure_iot_hub_client_report_properties_response_callback_set(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                                                      VOID (*callback_ptr)(
@@ -430,7 +517,14 @@ UINT nx_azure_iot_hub_client_report_properties_response_callback_set(NX_AZURE_IO
  * @param[out] response_status_ptr Status return for successful send of reported properties.
  * @param[in] wait_option Ticks to wait for message to send.
  * @return A `UINT` with the result of the API.
- *   @retval #NX_AZURE_IOT_SUCCESS Successful if device twin reported properties is sent successfully.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successful if device twin reported properties is sent.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to send reported properties due to invalid parameter.
+ *   @retval #NX_AZURE_IOT_NOT_ENABLED Fail to send reported properties due to device twin is not enabled.
+ *   @retval #NX_AZURE_IOT_SDK_CORE_ERROR Fail to send reported properties due to SDK core error.
+ *   @retval #NX_AZURE_IOT_INSUFFICIENT_BUFFER_SPACE Fail to send reported properties due to buffer size is too small.
+ *   @retval #NX_AZURE_IOT_NO_PACKET Fail to send reported properties due to no packet available.
+ *   @retval NX_NO_PACKET Fail to send reported properties due to no packet available.
+ *   @retval #NX_AZURE_IOT_DISCONNECTED Fail to send reported properties due to disconnect.
  */
 UINT nx_azure_iot_hub_client_device_twin_reported_properties_send(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                                                   UCHAR *message_buffer, UINT message_length,
@@ -444,7 +538,13 @@ UINT nx_azure_iot_hub_client_device_twin_reported_properties_send(NX_AZURE_IOT_H
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT
  * @param[in] wait_option Ticks to wait for sending request.
  * @return A `UINT` with the result of the API.
- *   @retval #NX_AZURE_IOT_SUCCESS Successful if device twin properties is requested successfully.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successful if device twin properties is requested.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to send device twin request due to invalid parameter.
+ *   @retval #NX_AZURE_IOT_NO_SUBSCRIBE_ACK Fail to send device twin request due to no subscribe ack.
+ *   @retval #NX_AZURE_IOT_SDK_CORE_ERROR Fail to send device twin request due to SDK core error.
+ *   @retval #NX_AZURE_IOT_INSUFFICIENT_BUFFER_SPACE Fail to send device twin request due to buffer size is too small.
+ *   @retval #NX_AZURE_IOT_NO_PACKET Fail to send device twin request due to no packet available.
+ *   @retval NX_NO_PACKET Fail to send device twin request due to no packet available.
  */
 UINT nx_azure_iot_hub_client_device_twin_properties_request(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                                             UINT wait_option);
@@ -454,10 +554,17 @@ UINT nx_azure_iot_hub_client_device_twin_properties_request(NX_AZURE_IOT_HUB_CLI
  * @details This routine receives complete device twin properties.
  *
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT
- * @param[out] packet_pptr Pointer to #NX_PACKET* that contains complete twin document.
+ * @param[out] packet_pptr Pointer to #NX_PACKET* that contains complete twin document. Caller owns the `NX_PACKET` memory.
  * @param[in] wait_option Ticks to wait for message to receive.
  * @return A `UINT` with the result of the API.
- *   @retval #NX_AZURE_IOT_SUCCESS Successful if device twin properties is received successfully.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successful if device twin properties is received.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to receive device twin properties due to invalid parameter.
+ *   @retval #NX_AZURE_IOT_NOT_ENABLED Fail to receive device twin properties due to it is not enabled.
+ *   @retval #NX_AZURE_IOT_NO_PACKET Fail to receive device twin properties due to timeout.
+ *   @retval #NX_AZURE_IOT_INVALID_PACKET Fail to receive device twin properties due to invalid packet.
+ *   @retval #NX_AZURE_IOT_SDK_CORE_ERROR Fail to receive device twin properties due to SDK core error.
+ *   @retval #NX_AZURE_IOT_SERVER_RESPONSE_ERROR Response code from server is not 2xx.
+ *   @retval #NX_AZURE_IOT_DISCONNECTED Fail to receive device twin properties due to disconnect.
  */
 UINT nx_azure_iot_hub_client_device_twin_properties_receive(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                                             NX_PACKET **packet_pptr, UINT wait_option);
@@ -467,10 +574,15 @@ UINT nx_azure_iot_hub_client_device_twin_properties_receive(NX_AZURE_IOT_HUB_CLI
  * @details This routine receives desired properties from IoTHub.
  *
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
- * @param[out] packet_pptr Pointer to #NX_PACKET* that contains complete twin document.
+ * @param[out] packet_pptr Pointer to #NX_PACKET* that contains complete twin document. Caller owns the `NX_PACKET` memory.
  * @param[in] wait_option Ticks to wait for message to receive.
  * @return A `UINT` with the result of the API.
- *   @retval #NX_AZURE_IOT_SUCCESS Successful if desired properties is received successfully.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successful if desired properties is received.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to receive desired properties due to invalid parameter.
+ *   @retval #NX_AZURE_IOT_NOT_ENABLED Fail to receive desired properties due to it is not enabled.
+ *   @retval #NX_AZURE_IOT_NO_PACKET Fail to receive desired properties due to timeout.
+ *   @retval #NX_AZURE_IOT_INVALID_PACKET Fail to receive desired properties due to invalid packet.
+ *   @retval #NX_AZURE_IOT_DISCONNECTED Fail to receive desired properties due to disconnect.
  */
 UINT nx_azure_iot_hub_client_device_twin_desired_properties_receive(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                                                     NX_PACKET **packet_pptr, UINT wait_option);
@@ -481,6 +593,10 @@ UINT nx_azure_iot_hub_client_device_twin_desired_properties_receive(NX_AZURE_IOT
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
  * @return
  *   @retval #NX_AZURE_IOT_SUCCESS Successful if direct method message receiving is enabled.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to enable direct method message receiving due to invalid parameter.
+ *   @retval NXD_MQTT_NOT_CONNECTED Fail to enable direct method message receiving due to MQTT not connected.
+ *   @retval NXD_MQTT_PACKET_POOL_FAILURE Fail to enable direct method message receiving due to no available packet in pool.
+ *   @retval NXD_MQTT_COMMUNICATION_FAILURE Fail to enable direct method message receiving due to TCP/TLS error.
  */
 UINT nx_azure_iot_hub_client_direct_method_enable(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr);
 
@@ -490,6 +606,10 @@ UINT nx_azure_iot_hub_client_direct_method_enable(NX_AZURE_IOT_HUB_CLIENT *hub_c
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS  Successful if direct method message receiving is disabled.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to disable direct method message receiving due to invalid parameter.
+ *   @retval NXD_MQTT_NOT_CONNECTED Fail to disable direct method message receiving due to MQTT not connected.
+ *   @retval NXD_MQTT_PACKET_POOL_FAILURE Fail to disable direct method message receiving due to no available packet in pool.
+ *   @retval NXD_MQTT_COMMUNICATION_FAILURE Fail to disable direct method message receiving due to TCP/TLS error.
  */
 UINT nx_azure_iot_hub_client_direct_method_disable(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr);
 
@@ -504,10 +624,16 @@ UINT nx_azure_iot_hub_client_direct_method_disable(NX_AZURE_IOT_HUB_CLIENT *hub_
  * @param[out] method_name_length_ptr Return length of `method_name_pptr` on success.
  * @param[out] context_pptr Return a pointer to the context pointer on success.
  * @param[out] context_length_ptr Return length of `context` on success.
- * @param[out] packet_pptr Return `NX_PACKET` containing the method payload on success.
+ * @param[out] packet_pptr Return `NX_PACKET` containing the method payload on success. Caller owns the `NX_PACKET` memory.
  * @param[in] wait_option Ticks to wait for message to arrive.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS  Successful if direct method message is received.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to receive direct method message due to invalid parameter.
+ *   @retval #NX_AZURE_IOT_NOT_ENABLED Fail to receive direct method message due to it is not enabled.
+ *   @retval #NX_AZURE_IOT_NO_PACKET Fail to receive direct method message due to timeout.
+ *   @retval #NX_AZURE_IOT_INVALID_PACKET Fail to receive direct method message due to invalid packet.
+ *   @retval #NX_AZURE_IOT_SDK_CORE_ERROR Fail to receive direct method message due to SDK core error.
+ *   @retval #NX_AZURE_IOT_DISCONNECTED Fail to receive direct method message due to disconnect.
  */
 UINT nx_azure_iot_hub_client_direct_method_message_receive(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                                            UCHAR **method_name_pptr, USHORT *method_name_length_ptr,
@@ -528,6 +654,9 @@ UINT nx_azure_iot_hub_client_direct_method_message_receive(NX_AZURE_IOT_HUB_CLIE
  * @param[in] wait_option Ticks to wait for message to send.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS  Successful if direct method response is send.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to send direct method response due to invalid parameter.
+ *   @retval #NX_AZURE_IOT_SDK_CORE_ERROR Fail to send direct method response due to SDK core error.
+ *   @retval NX_NO_PACKET Fail send direct method response due to no available packet in pool.
  */
 UINT nx_azure_iot_hub_client_direct_method_message_response(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                                             UINT status_code, VOID *context_ptr,

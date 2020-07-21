@@ -13,7 +13,6 @@ Sample connects to the device in the IoTHub using Symmetric key. To register new
 #define HOST_NAME                                   "<Hostname from connection string>"
 #define DEVICE_ID                                   "<DeviceId from connection string>"
 #define DEVICE_SYMMETRIC_KEY                        "<SharedAccessKey from connection string>"
-
 ```
 Above configuration by default enables all the features like: Telemetry, Cloud to device message and Direct Methods. To disable anyone, add following macro corresponding to the feature.
 
@@ -31,16 +30,13 @@ Above configuration by default enables all the features like: Telemetry, Cloud t
 
 ## IoTHub connect using X509 cert
 
-Sample connects to the device in the IoTHub using X509 cert. To register new device in IoTHub use the [doc](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-security-x509-get-started) to create device with X509 cert (RSA is only supported). After device registration is complete, copy the connection string for the device with following format **HostName=<>;DeviceId=<>;x509=true**. Add following macros to your compiler option.
+Sample connects to the device in the IoTHub using X509 cert. To generate self signed cert use the same steps mention in [IoTHub connect using X509 cert](#iothub-connect-using-x509-cert) section. Once certificate is generated, register new device in IoTHub with this cert (RSA is only supported) using the x509 getting started [document](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-security-x509-get-started). After device registration is complete, copy the connection string for the device with following format **HostName=<>;DeviceId=<>;x509=true**. Add following macros to your compiler option.
 
 ```
 #define HOST_NAME                                   "<Hostname from connection string>"
 #define DEVICE_ID                                   "<DeviceId from connection string>"
 #define USE_DEVICE_CERTIFICATE                      1
-#define DEVICE_CERT                                 {0x00, 0x00} /* your X509 cert der format hex values */
-#define DEVICE_PRIVATE_KEY                          {0x00, 0x00} /* your private key hex values */
 #define DEVICE_KEY_TYPE                             NX_SECURE_X509_KEY_TYPE_RSA_PKCS1_DER /* Right now only RSA certs are supported*/
-
 ```
 
 Steps to create self-signed certs using openssl
@@ -61,17 +57,27 @@ EOT
 
 # Generate private key and certificate (public key).
 openssl genrsa -out privkey.pem 2048
-openssl req -new -days 365 -nodes -x509 -key .\privkey.pem -out cert.pem -config x509_config.cfg -subj "/CN=<Same as device Id>"
+openssl req -new -days 365 -nodes -x509 -key privkey.pem -out cert.pem -config x509_config.cfg -subj "/CN=<Same as device Id>"
 
 # Convert format from key to der.
-openssl rsa -outform der -in privkey.key -out privkey.der 
+openssl rsa -outform der -in privkey.pem -out privkey.der 
 
 # Convert format from cert pem to der.
 openssl x509 -outform der -in cert.pem -out cert.der
 
 # Convert der to hex array (ubuntu).
-xxd -i cert.der > cert.der.c
-xxd -i privkey.der > privkey.der.c
+echo "#include \"nx_api.h\"
+/**
+device cert (`openssl x509 -in cert.pem -fingerprint -noout | sed 's/://g' `) :
+`cat cert.pem`
+
+device private key :
+`cat privkey.pem`
+*/
+" > sample_device_identity.c
+
+xxd -i cert.der | sed -E "s/(unsigned char) (\w+)/\1 sample_device_cert_ptr/g; s/(unsigned int) (\w+)_len/\1 sample_device_cert_len/g" >> sample_device_identity.c
+xxd -i privkey.der | sed -E "s/(unsigned char) (\w+)/\1 sample_device_private_key_ptr/g; s/(unsigned int) (\w+)_len/\1 sample_device_private_key_len/g" >> sample_device_identity.c
 
 ```
 
@@ -102,8 +108,6 @@ Note: To get the values, use the [doc](https://docs.microsoft.com/en-us/azure/io
 #define ID_SCOPE                                    "<ID Scope value from Provisioning service overview page>"
 #define REGISTRATION_ID                             "<RegistrationId provide when doing Individual registration>"
 #define USE_DEVICE_CERTIFICATE                      1
-#define DEVICE_CERT                                 {0x00, 0x00} /* your X509 cert der format hex values */
-#define DEVICE_PRIVATE_KEY                          {0x00, 0x00} /* your private key hex values */
 #define DEVICE_KEY_TYPE                             NX_SECURE_X509_KEY_TYPE_RSA_PKCS1_DER /* Right now only RSA certs are supported*/
 
 /* Enable DPS */

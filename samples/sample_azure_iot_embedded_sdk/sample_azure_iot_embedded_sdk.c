@@ -35,8 +35,10 @@ static NX_AZURE_IOT_PROVISIONING_CLIENT             prov_client;
 /* Using X509 certificate authenticate to connect to IoT Hub,
    set the device certificate as your device.  */
 #if (USE_DEVICE_CERTIFICATE == 1)
-UCHAR device_cert[] = DEVICE_CERT;
-UCHAR device_private_key[] = DEVICE_PRIVATE_KEY;
+extern const UCHAR sample_device_cert_ptr[];
+extern const UINT sample_device_cert_len;
+extern const UCHAR sample_device_private_key_ptr[];
+extern const UINT sample_device_private_key_len;
 NX_SECURE_X509_CERT device_certificate;
 #endif /* USE_DEVICE_CERTIFICATE */
 
@@ -119,10 +121,9 @@ static VOID connection_status_callback(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr, 
     }
 }
 
-void sample_entry(NX_IP *ip_ptr, NX_PACKET_POOL *pool_ptr, NX_DNS *dns_ptr, UINT (*unix_time_callback)(ULONG *unix_time))
+static UINT sample_initialize_iothub(NX_AZURE_IOT_HUB_CLIENT *iothub_client_ptr)
 {
-UINT status = 0;
-UINT loop = NX_TRUE;
+UINT status;
 #ifdef ENABLE_DPS_SAMPLE
 UCHAR *iothub_hostname = NX_NULL;
 UCHAR *iothub_device_id = NX_NULL;
@@ -134,6 +135,108 @@ UCHAR *iothub_device_id = (UCHAR *)DEVICE_ID;
 UINT iothub_hostname_length = sizeof(HOST_NAME) - 1;
 UINT iothub_device_id_length = sizeof(DEVICE_ID) - 1;
 #endif /* ENABLE_DPS_SAMPLE */
+
+#ifdef ENABLE_DPS_SAMPLE
+    /* Run DPS. */
+    if ((status = sample_dps_entry(&iothub_hostname, &iothub_hostname_length,
+                                   &iothub_device_id, &iothub_device_id_length)))
+    {
+        printf("Failed on sample_dps_entry!: error code = 0x%08x\r\n", status);
+        return(status);
+    }
+#endif /* ENABLE_DPS_SAMPLE */
+
+    /* Initialize IoTHub client. */
+    if ((status = nx_azure_iot_hub_client_initialize(iothub_client_ptr, &nx_azure_iot,
+                                                     iothub_hostname, iothub_hostname_length,
+                                                     iothub_device_id, iothub_device_id_length,
+                                                     (UCHAR *)MODULE_ID, sizeof(MODULE_ID) - 1,
+                                                     _nx_azure_iot_tls_supported_crypto,
+                                                     _nx_azure_iot_tls_supported_crypto_size,
+                                                     _nx_azure_iot_tls_ciphersuite_map,
+                                                     _nx_azure_iot_tls_ciphersuite_map_size,
+                                                     nx_azure_iot_tls_metadata_buffer,
+                                                     sizeof(nx_azure_iot_tls_metadata_buffer),
+                                                     &root_ca_cert)))
+    {
+        printf("Failed on nx_azure_iot_hub_client_initialize!: error code = 0x%08x\r\n", status);
+        return(status);
+    }
+
+#if (USE_DEVICE_CERTIFICATE == 1)
+
+    /* Initialize the device certificate.  */
+    if ((status = nx_secure_x509_certificate_initialize(&device_certificate,
+                                                        (UCHAR *)sample_device_cert_ptr, (USHORT)sample_device_cert_len,
+                                                        NX_NULL, 0,
+                                                        (UCHAR *)sample_device_private_key_ptr, (USHORT)sample_device_private_key_len,
+                                                        DEVICE_KEY_TYPE)))
+    {
+        printf("Failed on nx_secure_x509_certificate_initialize!: error code = 0x%08x\r\n", status);
+    }
+    /* Set device certificate.  */
+    else if ((status = nx_azure_iot_hub_client_device_cert_set(iothub_client_ptr, &device_certificate)))
+    {
+        printf("Failed on nx_azure_iot_hub_client_device_cert_set!: error code = 0x%08x\r\n", status);
+    }
+#else
+
+    /* Set symmetric key.  */
+    if ((status = nx_azure_iot_hub_client_symmetric_key_set(iothub_client_ptr,
+                                                            (UCHAR *)DEVICE_SYMMETRIC_KEY,
+                                                            sizeof(DEVICE_SYMMETRIC_KEY) - 1)))
+    {
+        printf("Failed on nx_azure_iot_hub_client_symmetric_key_set!\r\n");
+    }
+#endif /* USE_DEVICE_CERTIFICATE */
+
+    /* Set connection status callback. */
+    else if ((status = nx_azure_iot_hub_client_connection_status_callback_set(iothub_client_ptr,
+                                                                              connection_status_callback)))
+    {
+        printf("Failed on connection_status_callback!\r\n");
+    }    
+#ifndef DISABLE_C2D_SAMPLE
+    else if ((status = nx_azure_iot_hub_client_cloud_message_enable(iothub_client_ptr)))
+    {
+        printf("C2D receive enable failed!: error code = 0x%08x\r\n", status);
+    }
+#endif /* DISABLE_C2D_SAMPLE */
+#ifndef DISABLE_DIRECT_METHOD_SAMPLE
+    else if ((status = nx_azure_iot_hub_client_direct_method_enable(iothub_client_ptr)))
+    {
+        printf("Direct method receive enable failed!: error code = 0x%08x\r\n", status);
+    }
+#endif /* DISABLE_DIRECT_METHOD_SAMPLE */
+#ifndef DISABLE_DEVICE_TWIN_SAMPLE
+    else if ((status = nx_azure_iot_hub_client_device_twin_enable(iothub_client_ptr)))
+    {
+        printf("device twin enabled failed!: error code = 0x%08x\r\n", status);
+    }
+#endif /* DISABLE_DEVICE_TWIN_SAMPLE */
+
+    if (status)
+    {
+        nx_azure_iot_hub_client_deinitialize(iothub_client_ptr);
+    }
+    
+    return(status);
+}
+
+static void log_callback(az_log_classification classification, UCHAR *msg, UINT msg_len)
+{
+    if (classification == AZ_LOG_IOT_AZURERTOS)
+    {
+        printf("%.*s", msg_len, (CHAR *)msg);
+    }
+}
+
+void sample_entry(NX_IP *ip_ptr, NX_PACKET_POOL *pool_ptr, NX_DNS *dns_ptr, UINT (*unix_time_callback)(ULONG *unix_time))
+{
+UINT status = 0;
+UINT loop = NX_TRUE;
+
+    nx_azure_iot_log_init(log_callback);
 
     /* Create Azure IoT handler.  */
     if ((status = nx_azure_iot_create(&nx_azure_iot, (UCHAR *)"Azure IoT", ip_ptr, pool_ptr, dns_ptr,
@@ -153,135 +256,75 @@ UINT iothub_device_id_length = sizeof(DEVICE_ID) - 1;
         nx_azure_iot_delete(&nx_azure_iot);
         return;
     }
-
-#ifdef ENABLE_DPS_SAMPLE
-    /* Run DPS. */
-    else if ((status = sample_dps_entry(&iothub_hostname, &iothub_hostname_length,
-                                        &iothub_device_id, &iothub_device_id_length)))
+    
+    if ((status = sample_initialize_iothub(&iothub_client)))
     {
-        printf("Failed on sample_dps_entry!: error code = 0x%08x\r\n", status);
-        nx_azure_iot_delete(&nx_azure_iot);
-        return;
-    }
-#endif /* ENABLE_DPS_SAMPLE */
-
-    /* Initialize IoTHub client. */
-    else if ((status = nx_azure_iot_hub_client_initialize(&iothub_client, &nx_azure_iot,
-                                                          iothub_hostname, iothub_hostname_length,
-                                                          iothub_device_id, iothub_device_id_length,
-                                                          (UCHAR *)MODULE_ID, sizeof(MODULE_ID) - 1,
-                                                          _nx_azure_iot_tls_supported_crypto,
-                                                          _nx_azure_iot_tls_supported_crypto_size,
-                                                          _nx_azure_iot_tls_ciphersuite_map,
-                                                          _nx_azure_iot_tls_ciphersuite_map_size,
-                                                          nx_azure_iot_tls_metadata_buffer,
-                                                          sizeof(nx_azure_iot_tls_metadata_buffer),
-                                                          &root_ca_cert)))
-    {
-        printf("Failed on nx_azure_iot_hub_client_initialize!: error code = 0x%08x\r\n", status);
+        printf("Failed to initialize iothub client: error code = 0x%08x\r\n", status);
         nx_azure_iot_delete(&nx_azure_iot);
         return;
     }
 
-#if (USE_DEVICE_CERTIFICATE == 1)
-
-    /* Initialize the device certificate.  */
-    else if ((status = nx_secure_x509_certificate_initialize(&device_certificate, device_cert, sizeof(device_cert),
-                                                             NX_NULL, 0, device_private_key, sizeof(device_private_key),
-                                                             DEVICE_KEY_TYPE)))
-    {
-        printf("Failed on nx_secure_x509_certificate_initialize!: error code = 0x%08x\r\n", status);
-    }
-
-    /* Set device certificate.  */
-    else if ((status = nx_azure_iot_hub_client_device_cert_set(&iothub_client, &device_certificate)))
-    {
-        printf("Failed on nx_azure_iot_hub_client_device_cert_set!: error code = 0x%08x\r\n", status);
-    }
-#else
-
-    /* Set symmetric key.  */
-    else if ((status = nx_azure_iot_hub_client_symmetric_key_set(&iothub_client,
-                                                                 (UCHAR *)DEVICE_SYMMETRIC_KEY,
-                                                                 sizeof(DEVICE_SYMMETRIC_KEY) - 1)))
-    {
-        printf("Failed on nx_azure_iot_hub_client_symmetric_key_set!\r\n");
-    }
-#endif /* USE_DEVICE_CERTIFICATE */
-
-    /* Set connection status callback. */
-    else if (nx_azure_iot_hub_client_connection_status_callback_set(&iothub_client, connection_status_callback))
-    {
-        printf("Failed on connection_status_callback!\r\n");
-    }
-
-    /* Connect to IoTHub client. */
-    else if (nx_azure_iot_hub_client_connect(&iothub_client, NX_TRUE, NX_WAIT_FOREVER))
+    if (nx_azure_iot_hub_client_connect(&iothub_client, NX_TRUE, NX_WAIT_FOREVER))
     {
         printf("Failed on nx_azure_iot_hub_client_connect!\r\n");
+        nx_azure_iot_hub_client_deinitialize(&iothub_client);
+        nx_azure_iot_delete(&nx_azure_iot);
+        return;
     }
-
-    else
-    {
+    
 #ifndef DISABLE_TELEMETRY_SAMPLE
-        /* Create Telemetry sample thread. */
-        if ((status = tx_thread_create(&sample_telemetry_thread, "Sample Telemetry Thread",
-                                       sample_telemetry_thread_entry, 0,
-                                       (UCHAR *)sample_telemetry_thread_stack, SAMPLE_STACK_SIZE,
-                                       SAMPLE_THREAD_PRIORITY, SAMPLE_THREAD_PRIORITY,
-                                       1, TX_AUTO_START)))
-        {
-            printf("Failed to create telemetry sample thread!: error code = 0x%08x\r\n", status);
-        }
+    /* Create Telemetry sample thread. */
+    if ((status = tx_thread_create(&sample_telemetry_thread, "Sample Telemetry Thread",
+                                   sample_telemetry_thread_entry, 0,
+                                   (UCHAR *)sample_telemetry_thread_stack, SAMPLE_STACK_SIZE,
+                                   SAMPLE_THREAD_PRIORITY, SAMPLE_THREAD_PRIORITY,
+                                   1, TX_AUTO_START)))
+    {
+        printf("Failed to create telemetry sample thread!: error code = 0x%08x\r\n", status);
+    }
 #endif /* DISABLE_TELEMETRY_SAMPLE */
 
 #ifndef DISABLE_C2D_SAMPLE
-        /* Create C2D sample thread. */
-        if ((status = tx_thread_create(&sample_c2d_thread, "Sample C2D Thread",
-                                       sample_c2d_thread_entry, 0,
-                                       (UCHAR *)sample_c2d_thread_stack, SAMPLE_STACK_SIZE,
-                                       SAMPLE_THREAD_PRIORITY, SAMPLE_THREAD_PRIORITY,
-                                       1, TX_AUTO_START)))
-        {
-            printf("Failed to create c2d sample thread!: error code = 0x%08x\r\n", status);
-        }
+    /* Create C2D sample thread. */
+    if ((status = tx_thread_create(&sample_c2d_thread, "Sample C2D Thread",
+                                   sample_c2d_thread_entry, 0,
+                                   (UCHAR *)sample_c2d_thread_stack, SAMPLE_STACK_SIZE,
+                                   SAMPLE_THREAD_PRIORITY, SAMPLE_THREAD_PRIORITY,
+                                   1, TX_AUTO_START)))
+    {
+        printf("Failed to create c2d sample thread!: error code = 0x%08x\r\n", status);
+    }
 #endif /* DISABLE_C2D_SAMPLE */
 
 #ifndef DISABLE_DIRECT_METHOD_SAMPLE
-        /* Create Direct Method sample thread. */
-        if ((status = tx_thread_create(&sample_direct_method_thread, "Sample Direct Method Thread",
-                                       sample_direct_method_thread_entry, 0,
-                                       (UCHAR *)sample_direct_method_thread_stack, SAMPLE_STACK_SIZE,
-                                       SAMPLE_THREAD_PRIORITY, SAMPLE_THREAD_PRIORITY,
-                                       1, TX_AUTO_START)))
-        {
-            printf("Failed to create direct method sample thread!: error code = 0x%08x\r\n", status);
-        }
+    /* Create Direct Method sample thread. */
+    if ((status = tx_thread_create(&sample_direct_method_thread, "Sample Direct Method Thread",
+                                   sample_direct_method_thread_entry, 0,
+                                   (UCHAR *)sample_direct_method_thread_stack, SAMPLE_STACK_SIZE,
+                                   SAMPLE_THREAD_PRIORITY, SAMPLE_THREAD_PRIORITY,
+                                   1, TX_AUTO_START)))
+    {
+        printf("Failed to create direct method sample thread!: error code = 0x%08x\r\n", status);
+    }
 #endif /* DISABLE_DIRECT_METHOD_SAMPLE */
 
 #ifndef DISABLE_DEVICE_TWIN_SAMPLE
-        /* Create Device twin sample thread. */
-        if ((status = tx_thread_create(&sample_device_twin_thread, "Sample Device Twin Thread",
-                                       sample_device_twin_thread_entry, 0,
-                                       (UCHAR *)sample_device_twin_thread_stack, SAMPLE_STACK_SIZE,
-                                       SAMPLE_THREAD_PRIORITY, SAMPLE_THREAD_PRIORITY,
-                                       1, TX_AUTO_START)))
-        {
-            printf("Failed to create device twin sample thread!: error code = 0x%08x\r\n", status);
-        }
+    /* Create Device twin sample thread. */
+    if ((status = tx_thread_create(&sample_device_twin_thread, "Sample Device Twin Thread",
+                                   sample_device_twin_thread_entry, 0,
+                                   (UCHAR *)sample_device_twin_thread_stack, SAMPLE_STACK_SIZE,
+                                   SAMPLE_THREAD_PRIORITY, SAMPLE_THREAD_PRIORITY,
+                                   1, TX_AUTO_START)))
+    {
+        printf("Failed to create device twin sample thread!: error code = 0x%08x\r\n", status);
+    }
 #endif /* DISABLE_DEVICE_TWIN_SAMPLE */
 
-        /* Simply loop in sample. */
-        while (loop)
-        {
-            tx_thread_sleep(NX_IP_PERIODIC_RATE);
-        }
+    /* Simply loop in sample. */
+    while (loop)
+    {
+        tx_thread_sleep(NX_IP_PERIODIC_RATE);
     }
-
-    /* Destroy IoTHub Client.  */
-    nx_azure_iot_hub_client_disconnect(&iothub_client);
-    nx_azure_iot_hub_client_deinitialize(&iothub_client);
-    nx_azure_iot_delete(&nx_azure_iot);
 }
 
 #ifdef ENABLE_DPS_SAMPLE
@@ -314,8 +357,8 @@ UINT status;
 #if (USE_DEVICE_CERTIFICATE == 1)
 
     /* Initialize the device certificate.  */
-    if ((status = nx_secure_x509_certificate_initialize(&device_certificate, device_cert, sizeof(device_cert), NX_NULL, 0,
-                                                        device_private_key, sizeof(device_private_key), DEVICE_KEY_TYPE)))
+    if ((status = nx_secure_x509_certificate_initialize(&device_certificate, (UCHAR *)sample_device_cert_ptr, (USHORT)sample_device_cert_len, NX_NULL, 0,
+                                                        (UCHAR *)sample_device_private_key_ptr, (USHORT)sample_device_private_key_len, DEVICE_KEY_TYPE)))
     {
         printf("Failed on nx_secure_x509_certificate_initialize!: error code = 0x%08x\r\n", status);
     }
@@ -432,12 +475,6 @@ UCHAR *property_buf;
 
     NX_PARAMETER_NOT_USED(parameter);
 
-    if ((status = nx_azure_iot_hub_client_cloud_message_enable(&iothub_client)))
-    {
-        printf("C2D receive enable failed!: error code = 0x%08x\r\n", status);
-        return;
-    }
-
     /* Loop to receive c2d message.  */
     while (loop)
     {
@@ -482,12 +519,6 @@ VOID *context_ptr;
 
     NX_PARAMETER_NOT_USED(parameter);
 
-    if ((status = nx_azure_iot_hub_client_direct_method_enable(&iothub_client)))
-    {
-        printf("Direct method receive enable failed!: error code = 0x%08x\r\n", status);
-        return;
-    }
-
     /* Loop to receive direct method message.  */
     while (loop)
     {
@@ -510,6 +541,7 @@ VOID *context_ptr;
                                                                              NX_WAIT_FOREVER)))
         {
             printf("Direct method response failed!: error code = 0x%08x\r\n", status);
+            nx_packet_release(packet_ptr);
             break;
         }
 
@@ -528,12 +560,6 @@ UINT response_status;
 UINT request_id;
 
     NX_PARAMETER_NOT_USED(parameter);
-
-    if ((status = nx_azure_iot_hub_client_device_twin_enable(&iothub_client)))
-    {
-        printf("device twin enabled failed!: error code = 0x%08x\r\n", status);
-        return;
-    }
 
     if ((status = nx_azure_iot_hub_client_device_twin_properties_request(&iothub_client, NX_WAIT_FOREVER)))
     {

@@ -9,9 +9,15 @@
 /*                                                                        */
 /**************************************************************************/
 
-/* Version: 6.0 Preview */
+/* Version: 6.0 Preview 2 */
 
 #include "nx_azure_iot.h"
+
+#include <stdio.h>
+#include <stdarg.h>
+
+#include "azure/core/az_log.h"
+#include "azure/core/internal/az_log_internal.h"
 
 #ifndef NX_AZURE_IOT_WAIT_OPTION
 #define NX_AZURE_IOT_WAIT_OPTION NX_WAIT_FOREVER
@@ -26,6 +32,9 @@
 /* Define the prototypes for Azure RTOS IoT.  */
 NX_AZURE_IOT *_nx_azure_iot_created_ptr;
 
+/* Define the callback for logging */
+static VOID(*_nx_azure_iot_log_callback)(az_log_classification classification, UCHAR *msg, UINT msg_len);
+
 /* Define the base64 letters  */
 static CHAR _nx_azure_iot_base64_array[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -33,47 +42,6 @@ extern VOID nx_azure_iot_hub_client_event_process(NX_AZURE_IOT *nx_azure_iot_ptr
                                                   ULONG common_events, ULONG module_own_events);
 extern UINT _nxd_mqtt_client_publish_packet_send(NXD_MQTT_CLIENT *client_ptr, NX_PACKET *packet_ptr,
                                                  USHORT packet_id, UINT QoS, ULONG wait_option);
-
-static UINT nx_azure_iot_url_encode(CHAR *src_ptr, UINT src_len,
-                                    CHAR *dest_ptr, UINT dest_len, UINT *bytes_copied)
-{
-UINT dest_index;
-UINT src_index;
-CHAR ch;
-
-    for (src_index = 0, dest_index = 0; src_index < src_len; src_index++)
-    {
-        ch = src_ptr[src_index];
-
-        /* Check if encoding is required.
-           copied from sdk-core */
-        if ((('0' <= ch) && (ch <= '9')) ||
-            (('a' <= (ch | 0x20)) && ((ch | 0x20) <= 'z')))
-        {
-            if (dest_index >= dest_len)
-            {
-                return NX_AZURE_IOT_INSUFFICIENT_BUFFER_SPACE;
-            }
-
-            dest_ptr[dest_index++] = ch;
-        }
-        else
-        {
-            if ((dest_index + 2) >= dest_len)
-            {
-                return NX_AZURE_IOT_INSUFFICIENT_BUFFER_SPACE;
-            }
-
-            dest_ptr[dest_index++] = '%';
-            dest_ptr[dest_index++] = NX_AZURE_IOT_NUMBER_TO_UPPER_HEX((ch >> 4));
-            dest_ptr[dest_index++] = NX_AZURE_IOT_NUMBER_TO_UPPER_HEX((ch & 0x0F));
-        }
-    }
-
-    *bytes_copied = dest_index;
-
-    return NX_AZURE_IOT_SUCCESS;
-}
 
 static VOID nx_azure_iot_event_process(VOID *nx_azure_iot, ULONG common_events, ULONG module_own_events)
 {
@@ -140,6 +108,65 @@ UINT length;
     packet_ptr -> nx_packet_length += NX_AZURE_IOT_PUBLISH_PACKET_START_OFFSET;
 
     return(NX_AZURE_IOT_SUCCESS);
+}
+
+UINT nx_azure_iot_log(UCHAR *type_ptr, UINT type_len, UCHAR *msg_ptr, UINT msg_len, ...)
+{
+va_list ap;
+UCHAR buffer[10] = { 0 };
+az_span span;
+az_span num_span;
+
+    span = az_span_init(type_ptr, (INT)type_len);
+    _az_LOG_WRITE(AZ_LOG_IOT_AZURERTOS, span);
+
+    if (msg_len >= 2 && (msg_ptr[msg_len - 2] == '%') && (msg_ptr[msg_len - 1] == 'd'))
+    {
+        span = az_span_init((UCHAR *)msg_ptr, (INT)(msg_len - 2));
+        _az_LOG_WRITE(AZ_LOG_IOT_AZURERTOS, span);
+
+        va_start(ap, msg_len);
+        num_span = az_span_init(buffer, sizeof(buffer));
+        if (!az_failed(az_span_u32toa(num_span, va_arg(ap, UINT), &span)))
+        {
+            num_span = az_span_slice(num_span, 0, (INT)sizeof(buffer) - az_span_size(span));
+            _az_LOG_WRITE(AZ_LOG_IOT_AZURERTOS, num_span);
+        }
+        va_end(ap);
+    }
+    else
+    {
+        span = az_span_init((UCHAR *)msg_ptr, (INT)msg_len);
+        _az_LOG_WRITE(AZ_LOG_IOT_AZURERTOS, span);
+    }
+
+    _az_LOG_WRITE(AZ_LOG_IOT_AZURERTOS, AZ_SPAN_FROM_STR("\r\n"));
+
+    return(NX_AZURE_IOT_SUCCESS);
+}
+
+static VOID nx_azure_iot_log_listener(az_log_classification classification, az_span message)
+{
+    NX_PARAMETER_NOT_USED(classification);
+
+    if (_nx_azure_iot_log_callback != NX_NULL)
+    {
+        _nx_azure_iot_log_callback(classification, az_span_ptr(message), (UINT)az_span_size(message));
+    }
+}
+
+VOID nx_azure_iot_log_init(VOID(*log_callback)(az_log_classification classification, UCHAR *msg, UINT msg_len))
+{
+static az_log_classification const classifications[] = { AZ_LOG_IOT_AZURERTOS,
+                                                         AZ_LOG_MQTT_RECEIVED_TOPIC,
+                                                         AZ_LOG_MQTT_RECEIVED_PAYLOAD,
+                                                         AZ_LOG_IOT_RETRY,
+                                                         AZ_LOG_IOT_SAS_TOKEN,
+                                                         AZ_LOG_END_OF_LIST };
+
+    az_log_set_classifications(classifications);
+    _nx_azure_iot_log_callback = log_callback;
+    az_log_set_callback(nx_azure_iot_log_listener);
 }
 
 NX_AZURE_IOT_RESOURCE *nx_azure_iot_resource_search(NXD_MQTT_CLIENT *client_ptr)
@@ -215,7 +242,7 @@ UINT status;
     if ((nx_azure_iot_ptr == NX_NULL) || (ip_ptr == NX_NULL) ||
         (pool_ptr == NX_NULL) || (dns_ptr == NX_NULL))
     {
-        LogError("IoT create fail: INVALID POINTER");
+        LogError(LogLiteralArgs("IoT create fail: INVALID POINTER"));
         return(NX_AZURE_IOT_INVALID_PARAMETER);
     }
 
@@ -229,7 +256,7 @@ UINT status;
                              stack_memory_size, priority);
     if (status)
     {
-        LogError("IoT create fail: 0x%02x", status);
+        LogError(LogLiteralArgs("IoT create fail status: %d"), status);
         return(status);
     }
 
@@ -239,7 +266,7 @@ UINT status;
                                       nx_azure_iot_event_process, nx_azure_iot_ptr);
     if (status)
     {
-        LogError("IoT module register fail: 0x%02x", status);
+        LogError(LogLiteralArgs("IoT module register fail status: %d"), status);
         return(status);
     }
 
@@ -258,14 +285,14 @@ UINT status;
 
     if (nx_azure_iot_ptr == NX_NULL)
     {
-        LogError("IoT delete fail: INVALID POINTER");
+        LogError(LogLiteralArgs("IoT delete fail: INVALID POINTER"));
         return(NX_AZURE_IOT_INVALID_PARAMETER);
     }
 
     if (nx_azure_iot_ptr -> nx_azure_iot_resource_list_header)
     {
-        LogError("IoT delete fail: IOTHUB CLIENT NOT DELETED");
-        return(NX_AZURE_IOT_NOT_FOUND);
+        LogError(LogLiteralArgs("IoT delete fail: Resource NOT DELETED"));
+        return(NX_AZURE_IOT_DELETE_ERROR);
     }
 
     /* Deregister SDK module on cloud helper.  */
@@ -275,7 +302,7 @@ UINT status;
     status = nx_cloud_delete(&nx_azure_iot_ptr -> nx_azure_iot_cloud);
     if (status)
     {
-        LogError("IoT delete fail: 0x%02x", status);
+        LogError(LogLiteralArgs("IoT delete fail status: %d"), status);
         return(status);
     }
 
@@ -320,7 +347,7 @@ UINT status;
                                            packet_pptr, wait_option);
     if (status)
     {
-        LogError("Create publish packet failed");
+        LogError(LogLiteralArgs("Create publish packet failed"));
         return(status);
     }
 
@@ -334,21 +361,26 @@ UINT nx_azure_iot_publish_mqtt_packet(NXD_MQTT_CLIENT *client_ptr, NX_PACKET *pa
                                       UINT topic_len, UCHAR *packet_id, UINT qos, UINT wait_option)
 {
 UINT status;
+USHORT id = 0;
 
     status = nx_azure_iot_publish_packet_header_add(packet_ptr, topic_len, qos);
     if (status)
     {
-        LogError("failed to add mqtt header");
+        LogError(LogLiteralArgs("failed to add mqtt header"));
         return(status);
+    }
+
+    if (qos != 0)
+    {
+        id = (USHORT)((packet_id[0] << 8) | packet_id[1]);
     }
 
     /* Note, mutex will be released by this function. */
     status = _nxd_mqtt_client_publish_packet_send(client_ptr, packet_ptr,
-                                                  (USHORT)((packet_id[0] << 8) | packet_id[1]),
-                                                  qos, wait_option);
+                                                  id, qos, wait_option);
     if (status)
     {
-        LogError("Mqtt client send fail: PUBLISH FAIL: 0x%02x", status);
+        LogError(LogLiteralArgs("Mqtt client send fail: PUBLISH FAIL status: %d"), status);
         return(status);
     }
 
@@ -364,6 +396,13 @@ UINT status;
     if (status)
     {
         return(status);
+    }
+
+    /* Do nothing if the client is not connected. */
+    if (client_ptr -> nxd_mqtt_client_state != NXD_MQTT_CLIENT_STATE_CONNECTED)
+    {
+        LogError(LogLiteralArgs("MQTT NOT CONNECTED"));
+        return(NX_AZURE_IOT_DISCONNECTED);
     }
 
     /* Internal API assuming it to be 2 Byte buffer */
@@ -399,7 +438,7 @@ NX_PACKET *current_packet_ptr;
 
         /* Move data to the nx_packet_data_start. */
         size = (UINT)(packet_ptr -> nx_packet_append_ptr - packet_ptr -> nx_packet_prepend_ptr);
-        memmove(packet_ptr -> nx_packet_data_start, packet_ptr -> nx_packet_prepend_ptr, size);
+        memmove(packet_ptr -> nx_packet_data_start, packet_ptr -> nx_packet_prepend_ptr, size); /* Use case of memmove is verified. */
         packet_ptr -> nx_packet_prepend_ptr = packet_ptr -> nx_packet_data_start;
         packet_ptr -> nx_packet_append_ptr = packet_ptr -> nx_packet_data_start + size;
     }
@@ -427,18 +466,18 @@ NX_PACKET *current_packet_ptr;
         {
 
             /* Copy all data from current packet. */
-            memcpy((VOID *)packet_ptr -> nx_packet_append_ptr, (VOID *)current_packet_ptr -> nx_packet_prepend_ptr, copy_size);
+            memcpy((VOID *)packet_ptr -> nx_packet_append_ptr, (VOID *)current_packet_ptr -> nx_packet_prepend_ptr, copy_size); /* Use case of memcpy is verified. */
             packet_ptr -> nx_packet_append_ptr = packet_ptr -> nx_packet_append_ptr + copy_size;
         }
         else
         {
 
             /* Copy partial data from current packet. */
-            memcpy(packet_ptr -> nx_packet_append_ptr, current_packet_ptr -> nx_packet_prepend_ptr, size);
+            memcpy(packet_ptr -> nx_packet_append_ptr, current_packet_ptr -> nx_packet_prepend_ptr, size); /* Use case of memcpy is verified. */
             packet_ptr -> nx_packet_append_ptr = packet_ptr -> nx_packet_data_end;
 
             /* Move data in current packet to nx_packet_data_start. */
-            memmove((VOID *)current_packet_ptr -> nx_packet_data_start,
+            memmove((VOID *)current_packet_ptr -> nx_packet_data_start, /* Use case of memmove is verified. */
                     (VOID *)(current_packet_ptr -> nx_packet_prepend_ptr + size),
                     (copy_size - size));
             current_packet_ptr -> nx_packet_prepend_ptr = current_packet_ptr -> nx_packet_data_start;
@@ -477,7 +516,7 @@ NX_AZURE_IOT_RESOURCE *resource_ptr;
 
     if (resource_ptr == NX_NULL)
     {
-        LogError("Failed to find associated resource");
+        LogError(LogLiteralArgs("Failed to find associated resource"));
         return(NX_AZURE_IOT_INVALID_PARAMETER);
     }
 
@@ -491,14 +530,14 @@ NX_AZURE_IOT_RESOURCE *resource_ptr;
                                                resource_ptr -> resource_metadata_size);
     if (status)
     {
-        LogError("Failed to create TLS session: 0x%02x", status);
+        LogError(LogLiteralArgs("Failed to create TLS session status: %d"), status);
         return(status);
     }
 
     status = nx_secure_tls_trusted_certificate_add(tls_session, resource_ptr -> resource_trusted_certificate);
     if (status)
     {
-        LogError("Failed to add trusted CA certificate to session: 0x%02x", status);
+        LogError(LogLiteralArgs("Failed to add trusted CA certificate to session status: %d"), status);
         return(status);
     }
 
@@ -507,7 +546,7 @@ NX_AZURE_IOT_RESOURCE *resource_ptr;
         status = nx_secure_tls_local_certificate_add(tls_session, resource_ptr -> resource_device_certificate);
         if (status)
         {
-            LogError("Failed to add device certificate to session: 0x%02x", status);
+            LogError(LogLiteralArgs("Failed to add device certificate to session status: %d"), status);
             return(status);
         }
     }
@@ -517,7 +556,7 @@ NX_AZURE_IOT_RESOURCE *resource_ptr;
                                                      sizeof(resource_ptr -> resource_tls_packet_buffer));
     if (status)
     {
-        LogError("Failed to set the session packet buffer: 0x%02x", status);
+        LogError(LogLiteralArgs("Failed to set the session packet buffer: status: %d"), status);
         return(status);
     }
 
@@ -531,7 +570,7 @@ UINT nx_azure_iot_unix_time_get(NX_AZURE_IOT *nx_azure_iot_ptr, ULONG *unix_time
         (nx_azure_iot_ptr -> nx_azure_iot_unix_time_get == NX_NULL) ||
         (unix_time == NX_NULL))
     {
-        LogError("Unix time callback not set");
+        LogError(LogLiteralArgs("Unix time callback not set"));
         return(NX_AZURE_IOT_INVALID_PARAMETER);
     }
 
@@ -559,7 +598,7 @@ UINT    sourceLength = length;
 
     if (name_size < length)
     {
-        LogError("Failed to find enough memory");
+        LogError(LogLiteralArgs("Failed to find enough memory"));
         return(NX_AZURE_IOT_INSUFFICIENT_BUFFER_SPACE);
     }
 
@@ -664,7 +703,7 @@ UINT    step;
 
     if (base64name_size <= length)
     {
-        LogError("Failed to find enough memory");
+        LogError(LogLiteralArgs("Failed to find enough memory"));
         return(NX_AZURE_IOT_INSUFFICIENT_BUFFER_SPACE);
     }
 
@@ -792,11 +831,11 @@ const NX_CRYPTO_METHOD *hmac_sha_256_crypto_method = NX_NULL;
     return(status);
 }
 
-UINT nx_azure_iot_url_encoded_hmac_sha256_calculate(NX_AZURE_IOT_RESOURCE *resource_ptr,
-                                                    UCHAR *key_ptr, UINT key_size,
-                                                    UCHAR *message_ptr, UINT message_size,
-                                                    UCHAR *buffer_ptr, UINT buffer_len,
-                                                    UCHAR **output_pptr, UINT *output_len)
+UINT nx_azure_iot_base64_hmac_sha256_calculate(NX_AZURE_IOT_RESOURCE *resource_ptr,
+                                               UCHAR *key_ptr, UINT key_size,
+                                               UCHAR *message_ptr, UINT message_size,
+                                               UCHAR *buffer_ptr, UINT buffer_len,
+                                               UCHAR **output_pptr, UINT *output_len_ptr)
 {
 UINT status;
 UCHAR *hash_buf;
@@ -810,14 +849,14 @@ UINT binary_key_buf_size;
                                         buffer_ptr, binary_key_buf_size, &binary_key_buf_size);
     if (status)
     {
-        LogError("Failed to base64 decode");
+        LogError(LogLiteralArgs("Failed to base64 decode"));
         return(status);
     }
 
     buffer_len -= binary_key_buf_size;
     if ((hash_buf_size + encoded_hash_buf_size) > buffer_len)
     {
-        LogError("Failed to not enough memory");
+        LogError(LogLiteralArgs("Failed to not enough memory"));
         return(NX_AZURE_IOT_INSUFFICIENT_BUFFER_SPACE);
     }
 
@@ -826,7 +865,7 @@ UINT binary_key_buf_size;
                                                 message_ptr, (UINT)message_size, hash_buf);
     if (status)
     {
-        LogError("Failed to get hash256");
+        LogError(LogLiteralArgs("Failed to get hash256"));
         return(status);
     }
 
@@ -838,19 +877,12 @@ UINT binary_key_buf_size;
                                         encoded_hash_buf, encoded_hash_buf_size);
     if (status)
     {
-        LogError("Failed to base64 encode");
+        LogError(LogLiteralArgs("Failed to base64 encode"));
         return(status);
     }
 
-    buffer_len -= encoded_hash_buf_size;
-    *output_pptr = (UCHAR *)(encoded_hash_buf + encoded_hash_buf_size);
-    status = nx_azure_iot_url_encode(encoded_hash_buf, strlen(encoded_hash_buf),
-                                     (CHAR *)*output_pptr, buffer_len, output_len);
-    if (status)
-    {
-        LogError("Failed to get hash256");
-        return(status);
-    }
+    *output_pptr = (UCHAR *)(encoded_hash_buf);
+    *output_len_ptr = strlen(encoded_hash_buf);
 
     return(NX_AZURE_IOT_SUCCESS);
 }
