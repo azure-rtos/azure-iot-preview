@@ -36,6 +36,10 @@
 #define SAMPLE_MAX_EXPONENTIAL_BACKOFF_JITTER_PERCENT                   (60)
 #endif /* SAMPLE_MAX_EXPONENTIAL_BACKOFF_JITTER_PERCENT */
 
+#ifndef SAMPLE_WAIT_OPTION
+#define SAMPLE_WAIT_OPTION                                              (NX_NO_WAIT)
+#endif /* SAMPLE_WAIT_OPTION */
+
 /* Sample events */
 #define SAMPLE_ALL_EVENTS                                               ((ULONG)0xFFFFFFFF)
 #define SAMPLE_CONNECT_EVENT                                            ((ULONG)0x00000001)
@@ -401,7 +405,7 @@ static VOID sample_connect_action(SAMPLE_CONTEXT *context)
         return;
     }
 
-    context -> action_result = nx_azure_iot_hub_client_connect(&(context -> iothub_client), NX_FALSE, NX_NO_WAIT);
+    context -> action_result = nx_azure_iot_hub_client_connect(&(context -> iothub_client), NX_FALSE, SAMPLE_WAIT_OPTION);
 
     if (context -> action_result == NX_AZURE_IOT_CONNECTING)
     {
@@ -411,6 +415,13 @@ static VOID sample_connect_action(SAMPLE_CONTEXT *context)
     {
         sample_connection_status = context -> action_result;
         context -> state = SAMPLE_STATE_DISCONNECTED;
+    }
+    else
+    {
+        context -> state = SAMPLE_STATE_CONNECTED;
+
+        context -> action_result =
+            nx_azure_iot_hub_client_device_twin_properties_request(&(context -> iothub_client), NX_WAIT_FOREVER);
     }
 }
 
