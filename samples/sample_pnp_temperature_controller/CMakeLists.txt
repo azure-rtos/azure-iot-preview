@@ -1,0 +1,21 @@
+target_sources(${PROJECT_NAME}
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/main.c
+    ${CMAKE_CURRENT_LIST_DIR}/nx_azure_iot_cert.c
+    ${CMAKE_CURRENT_LIST_DIR}/nx_azure_iot_cert.h
+    ${CMAKE_CURRENT_LIST_DIR}/nx_azure_iot_ciphersuites.c
+    ${CMAKE_CURRENT_LIST_DIR}/nx_azure_iot_ciphersuites.h
+    ${CMAKE_CURRENT_LIST_DIR}/nx_azure_iot_pnp_helpers.c
+    ${CMAKE_CURRENT_LIST_DIR}/nx_azure_iot_pnp_helpers.h
+    ${CMAKE_CURRENT_LIST_DIR}/sample_pnp_deviceinfo_component.c
+    ${CMAKE_CURRENT_LIST_DIR}/sample_pnp_deviceinfo_component.h
+    ${CMAKE_CURRENT_LIST_DIR}/sample_pnp_temperature_controller.c
+    ${CMAKE_CURRENT_LIST_DIR}/sample_pnp_thermostat_component.c
+    ${CMAKE_CURRENT_LIST_DIR}/sample_pnp_thermostat_component.h
+    ${CMAKE_CURRENT_LIST_DIR}/sample_config.h
+)
+
+target_include_directories(${PROJECT_NAME}
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+)
