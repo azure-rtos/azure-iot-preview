@@ -76,16 +76,7 @@ Each official release (preview or GA) will be tagged to mark the commit and publ
 
 # Sample projects
 
-The following ZIP files can be downloaded from the [Release](https://github.com/azure-rtos/azure-iot-preview/releases) associated with this repository:
-
-* Azure_RTOS_6.0_ATSAME54-XPRO_IAR_Embedded_SDK_Sample_2020_05_20.zip
-* Azure_RTOS_6.0_ATSAME54-XPRO_MPLAB_Embedded_SDK_Sample_2020_05_20.zip
-* Azure_RTOS_6.0_MIMXRT1060_IAR_Embedded_SDK_Sample_2020_05_20.zip
-* Azure_RTOS_6.0_MIMXRT1060_MCUXpresso_Embedded_SDK_Sample_2020_05_20.zip
-* Azure_RTOS_6.0_STM32F746G-DISCO_IAR_Embedded_SDK_Sample_2020_05_20.zip
-* Azure_RTOS_6.0_STM32F746G-DISCO_STM32CubeIDE_Embedded_SDK_Sample_2020_05_20.zip
-* Azure_RTOS_6.0_STM32L475-DISCO_IAR_Embedded_SDK_Sample_2020_05_20.zip
-* Azure_RTOS_6.0_STM32L475-DISCO_STM32CubeIDE_Embedded_SDK_Sample_2020_05_20.zip
+Sample projects ZIP files can be downloaded from the [Release](https://github.com/azure-rtos/azure-iot-preview/releases) associated with this repository.
 
 NOTE: These zip files are completely self-contained and include appropriate
 code from the other Azure RTOS repositories. Please refer to the LICENSE.txt file
