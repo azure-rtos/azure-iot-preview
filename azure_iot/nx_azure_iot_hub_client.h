@@ -233,7 +233,7 @@ UINT nx_azure_iot_hub_client_model_id_set(NX_AZURE_IOT_HUB_CLIENT *hub_client_pt
  * @param[in] clean_session Can be set to `0` to re-use current session, or `1` to start new session
  * @param[in] wait_option Number of ticks to wait for internal resources to be available.
  * @return A `UINT` with the result of the API.
- *   @retval #NX_AZURE_IOT_SUCCESS  Successful if connected to Azure IoT Hub.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successful if connected to Azure IoT Hub.
  *   @retval #NX_AZURE_IOT_CONNECTING Successfully started connection but not yet completed.
  *   @retval #NX_AZURE_IOT_ALREADY_CONNECTED Already connected to Azure IoT Hub.
  *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to connect to Azure IoT Hub due to invalid parameter.
@@ -258,7 +258,7 @@ UINT nx_azure_iot_hub_client_connect(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
  *
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
  * @return A `UINT` with the result of the API.
- *   @retval #NX_AZURE_IOT_SUCCESS  Successful if client disconnects.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successful if client disconnects.
  *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to disconnect due to invalid parameter.
  */
 UINT nx_azure_iot_hub_client_disconnect(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr);
@@ -283,7 +283,7 @@ UINT nx_azure_iot_hub_client_disconnect(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr)
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
  * @param[in] connection_status_cb Pointer to a callback function invoked on connection status is changed.
  * @return A `UINT` with the result of the API.
- *   @retval #NX_AZURE_IOT_SUCCESS  Successful if connection status callback is set.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successful if connection status callback is set.
  *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to set connection status callback due to invalid parameter.
  */
 UINT nx_azure_iot_hub_client_connection_status_callback_set(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
@@ -395,7 +395,7 @@ UINT nx_azure_iot_hub_client_telemetry_send(NX_AZURE_IOT_HUB_CLIENT *hub_client_
  *
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
  * @return A `UINT` with the result of the API.
- *   @retval #NX_AZURE_IOT_SUCCESS  Successful if C2D message receiving is enabled.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successful if C2D message receiving is enabled.
  *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to enable C2D message receiving due to invalid parameter.
  *   @retval NXD_MQTT_NOT_CONNECTED Fail to enable C2D message receiving due to MQTT not connected.
  *   @retval NXD_MQTT_PACKET_POOL_FAILURE Fail to enable C2D message receiving due to no available packet in pool.
@@ -408,7 +408,7 @@ UINT nx_azure_iot_hub_client_cloud_message_enable(NX_AZURE_IOT_HUB_CLIENT *hub_c
  *
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
  * @return A `UINT` with the result of the API.
- *   @retval #NX_AZURE_IOT_SUCCESS  Successful if C2D message receiving is disabled.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successful if C2D message receiving is disabled.
  *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to disable C2D message receiving due to invalid parameter.
  *   @retval NXD_MQTT_NOT_CONNECTED Fail to disable C2D message receiving due to MQTT not connected.
  *   @retval NXD_MQTT_PACKET_POOL_FAILURE Fail to disable C2D message receiving due to no available packet in pool.
@@ -426,7 +426,7 @@ UINT nx_azure_iot_hub_client_cloud_message_disable(NX_AZURE_IOT_HUB_CLIENT *hub_
  * @param[out] packet_pptr Return a `NX_PACKET` pointer with C2D message on success. Caller owns the `NX_PACKET` memory.
  * @param[in] wait_option Ticks to wait for message to arrive.
  * @return A `UINT` with the result of the API.
- *   @retval #NX_AZURE_IOT_SUCCESS  Successful if C2D message is received.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successful if C2D message is received.
  *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to receive C2D message due to invalid parameter.
  *   @retval #NX_AZURE_IOT_NOT_ENABLED Fail to receive C2D message due to it is not enabled.
  *   @retval #NX_AZURE_IOT_NO_PACKET Fail to receive C2D message due to timeout.
@@ -605,7 +605,7 @@ UINT nx_azure_iot_hub_client_direct_method_enable(NX_AZURE_IOT_HUB_CLIENT *hub_c
  *
  * @param[in] hub_client_ptr A pointer to a #NX_AZURE_IOT_HUB_CLIENT.
  * @return A `UINT` with the result of the API.
- *   @retval #NX_AZURE_IOT_SUCCESS  Successful if direct method message receiving is disabled.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successful if direct method message receiving is disabled.
  *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to disable direct method message receiving due to invalid parameter.
  *   @retval NXD_MQTT_NOT_CONNECTED Fail to disable direct method message receiving due to MQTT not connected.
  *   @retval NXD_MQTT_PACKET_POOL_FAILURE Fail to disable direct method message receiving due to no available packet in pool.
@@ -627,7 +627,7 @@ UINT nx_azure_iot_hub_client_direct_method_disable(NX_AZURE_IOT_HUB_CLIENT *hub_
  * @param[out] packet_pptr Return `NX_PACKET` containing the method payload on success. Caller owns the `NX_PACKET` memory.
  * @param[in] wait_option Ticks to wait for message to arrive.
  * @return A `UINT` with the result of the API.
- *   @retval #NX_AZURE_IOT_SUCCESS  Successful if direct method message is received.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successful if direct method message is received.
  *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to receive direct method message due to invalid parameter.
  *   @retval #NX_AZURE_IOT_NOT_ENABLED Fail to receive direct method message due to it is not enabled.
  *   @retval #NX_AZURE_IOT_NO_PACKET Fail to receive direct method message due to timeout.
@@ -653,7 +653,7 @@ UINT nx_azure_iot_hub_client_direct_method_message_receive(NX_AZURE_IOT_HUB_CLIE
  * @param[in] payload_length Length of `payload`
  * @param[in] wait_option Ticks to wait for message to send.
  * @return A `UINT` with the result of the API.
- *   @retval #NX_AZURE_IOT_SUCCESS  Successful if direct method response is send.
+ *   @retval #NX_AZURE_IOT_SUCCESS Successful if direct method response is send.
  *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to send direct method response due to invalid parameter.
  *   @retval #NX_AZURE_IOT_SDK_CORE_ERROR Fail to send direct method response due to SDK core error.
  *   @retval NX_NO_PACKET Fail send direct method response due to no available packet in pool.
