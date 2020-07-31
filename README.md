@@ -21,7 +21,7 @@ Feature | Azure RTOS SDK for Azure IoT services  | Description
  [Direct Methods](https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-direct-methods) | :heavy_check_mark: | IoT Hub gives you the ability to invoke direct methods on devices from the cloud.  
  [DPS - Device Provisioning Service](https://docs.microsoft.com/azure/iot-dps/) | :heavy_check_mark: | This SDK supports connecting your device to the Device Provisioning Service via, for example, [individual enrollment](https://docs.microsoft.com/azure/iot-dps/concepts-service#enrollment) using an [X.509 leaf certificate](https://docs.microsoft.com/azure/iot-dps/concepts-security#leaf-certificate).  
  Protocol | MQTT | The Azure RTOS SDK for Azure IoT services supports only MQTT.
- [Plug and Play](https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play) | Coming Soon | IoT Plug and Play Preview enables solution developers to integrate devices with their solutions without writing any embedded code. 
+ [Plug and Play](https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play) | :heavy_check_mark: | IoT Plug and Play Preview enables solution developers to integrate devices with their solutions without writing any embedded code. 
 
 # Building and using the library
 
