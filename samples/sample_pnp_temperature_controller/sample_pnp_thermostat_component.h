@@ -65,7 +65,7 @@ UINT sample_pnp_thermostat_process_property_update(SAMPLE_PNP_THERMOSTAT_COMPONE
                                                    NX_AZURE_IOT_HUB_CLIENT *iothub_client_ptr,
                                                    UCHAR *component_name_ptr, UINT component_name_length,
                                                    UCHAR *property_name_ptr, UINT property_name_length,
-                                                   az_json_token *property_token, UINT version);
+                                                   az_json_reader *property_value_reader_ptr, UINT version);
 
 #ifdef __cplusplus
 }

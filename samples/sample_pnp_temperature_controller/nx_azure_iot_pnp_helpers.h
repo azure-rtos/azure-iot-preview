@@ -56,7 +56,7 @@ UINT nx_azure_iot_pnp_helper_twin_data_parse(NX_PACKET *packet_ptr, UINT is_part
                                              VOID (*sample_desired_property_callback)(UCHAR *component_name_ptr,
                                                    UINT component_name_len, UCHAR *property_name_ptr,
                                                    UINT property_name_len,
-                                                   az_json_token *propertyValue, UINT version,
+                                                   az_json_reader property_value_reader, UINT version,
                                                    VOID *userContextCallback),
                                              VOID *context_ptr);
 

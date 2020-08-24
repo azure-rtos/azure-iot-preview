@@ -49,11 +49,11 @@ static UINT sample_get_maxmin_report(SAMPLE_PNP_THERMOSTAT_COMPONENT *handle,
 UINT status;
 az_json_writer json_writer;
 az_json_reader jp;
-az_span response = az_span_init(buffer, (INT)buffer_size);
+az_span response = az_span_create(buffer, (INT)buffer_size);
 az_span start_time_span = fake_start_report_time;
-az_span payload_span = az_span_init(packet_ptr -> nx_packet_prepend_ptr,
-                                    (INT)(packet_ptr -> nx_packet_append_ptr -
-                                          packet_ptr -> nx_packet_prepend_ptr));
+az_span payload_span = az_span_create(packet_ptr -> nx_packet_prepend_ptr,
+                                      (INT)(packet_ptr -> nx_packet_append_ptr -
+                                            packet_ptr -> nx_packet_prepend_ptr));
 INT time_len;
 UCHAR time_buf[32];
 
@@ -66,7 +66,7 @@ UCHAR time_buf[32];
              return(NX_NOT_SUCCESSFUL);
         }
 
-        start_time_span = az_span_init(time_buf, time_len);
+        start_time_span = az_span_create(time_buf, time_len);
     }
 
     /* Build the method response payload */
@@ -85,7 +85,7 @@ UCHAR time_buf[32];
         az_succeeded(az_json_writer_append_end_object(&json_writer)))
     {
         status = NX_AZURE_IOT_SUCCESS;
-        *bytes_copied = (UINT)az_span_size(az_json_writer_get_json(&json_writer));
+        *bytes_copied = (UINT)az_span_size(az_json_writer_get_bytes_used_in_destination(&json_writer));
     }
     else
     {
@@ -259,7 +259,7 @@ UINT buffer_length;
         return(NX_NOT_SUCCESSFUL);
     }
 
-    buffer_length = (UINT)az_span_size(az_json_writer_get_json(&json_writer));
+    buffer_length = (UINT)az_span_size(az_json_writer_get_bytes_used_in_destination(&json_writer));
     if ((status = nx_azure_iot_hub_client_telemetry_send(iothub_client_ptr, packet_ptr,
                                                          (UCHAR *)scratch_buffer, buffer_length, NX_WAIT_FOREVER)))
     {
@@ -316,7 +316,7 @@ UINT sample_pnp_thermostat_process_property_update(SAMPLE_PNP_THERMOSTAT_COMPONE
                                                    NX_AZURE_IOT_HUB_CLIENT *iothub_client_ptr,
                                                    UCHAR *component_name_ptr, UINT component_name_length,
                                                    UCHAR *property_name_ptr, UINT property_name_length,
-                                                   az_json_token *property_token, UINT version)
+                                                   az_json_reader *property_value_reader_ptr, UINT version)
 {
 double parsed_value = 0;
 INT status_code;
@@ -340,7 +340,7 @@ const CHAR *description;
         status_code = 404;
         description = temp_response_description_failed;
     }
-    else if (az_failed(az_json_token_get_double(property_token, &parsed_value)))
+    else if (az_failed(az_json_token_get_double(&(property_value_reader_ptr -> token), &parsed_value)))
     {
         status_code = 401;
         description = temp_response_description_failed;

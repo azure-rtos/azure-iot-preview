@@ -27,11 +27,28 @@ static ULONG nx_azure_iot_thread_stack[NX_AZURE_IOT_STACK_SIZE / sizeof(ULONG)];
 
 /* Define the prototypes for AZ IoT.  */
 static NX_AZURE_IOT                                 nx_azure_iot;
-static NX_AZURE_IOT_HUB_CLIENT                      iothub_client;
+
+/* Generally, IoTHub Client and DPS Client do not run at the same time, user can use union as below to
+   share the memory between IoTHub Client and DPS Client.
+
+   NOTE: If user can not make sure sharing memory is safe, IoTHub Client and DPS Client must be defined seperately.  */
+typedef union SAMPLE_CLIENT_UNION
+{
+    NX_AZURE_IOT_HUB_CLIENT                         iothub_client;
+
 #ifdef ENABLE_DPS_SAMPLE
-static NX_AZURE_IOT_PROVISIONING_CLIENT             prov_client;
+    NX_AZURE_IOT_PROVISIONING_CLIENT                prov_client;
 #endif /* ENABLE_DPS_SAMPLE */
 
+} SAMPLE_CLIENT;
+
+static SAMPLE_CLIENT                                client;
+
+#define iothub_client client.iothub_client
+#ifdef ENABLE_DPS_SAMPLE
+#define prov_client client.prov_client
+#endif /* ENABLE_DPS_SAMPLE */
+ 
 /* Using X509 certificate authenticate to connect to IoT Hub,
    set the device certificate as your device.  */
 #if (USE_DEVICE_CERTIFICATE == 1)

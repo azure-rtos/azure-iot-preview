@@ -73,7 +73,7 @@ static UINT visit_component_properties(UCHAR *component_name_ptr, UINT component
                                        VOID (*sample_desired_property_callback)(UCHAR *component_name_ptr,
                                              UINT component_name_len,
                                              UCHAR *property_name_ptr, UINT property_name_len,
-                                             az_json_token *propertyValue, UINT version,
+                                             az_json_reader property_value_reader, UINT version,
                                              VOID *userContextCallback), VOID *context_ptr)
 {
 UINT len;
@@ -107,7 +107,7 @@ UINT len;
             }
 
             sample_desired_property_callback(component_name_ptr, component_name_len,
-                                             scratch_buf, len, &(json_reader -> token), version, context_ptr);
+                                             scratch_buf, len, *json_reader, version, context_ptr);
 
         }
 
@@ -161,7 +161,7 @@ UINT nx_azure_iot_pnp_helper_command_name_parse(UCHAR *method_name_ptr, UINT met
                                                 UCHAR **pnp_command_name_pptr, UINT *pnp_command_name_length_ptr)
 {
 INT index;
-az_span method_name = az_span_init(method_name_ptr, (INT)method_name_length);
+az_span method_name = az_span_create(method_name_ptr, (INT)method_name_length);
 
     if ((index = az_span_find(method_name, command_separator)) != -1)
     {
@@ -192,7 +192,7 @@ UINT nx_azure_iot_pnp_helper_twin_data_parse(NX_PACKET *packet_ptr, UINT is_part
                                              VOID (*sample_desired_property_callback)(UCHAR *component_name_ptr,
                                                    UINT component_name_len, UCHAR *property_name_ptr,
                                                    UINT property_name_len,
-                                                   az_json_token *propertyValue, UINT version,
+                                                   az_json_reader property_value_reader, UINT version,
                                                    VOID *userContextCallback),
                                              VOID *context_ptr)
 {
@@ -209,7 +209,7 @@ UINT index;
         return(NX_NOT_SUCCESSFUL);
     }
 
-    payload = az_span_init(packet_ptr -> nx_packet_prepend_ptr, (INT)(packet_ptr -> nx_packet_length));
+    payload = az_span_create(packet_ptr -> nx_packet_prepend_ptr, (INT)(packet_ptr -> nx_packet_length));
     if (az_failed(az_json_reader_init(&json_reader, payload, NX_NULL)) ||
         az_failed(az_json_reader_next_token(&json_reader)))
     {
@@ -272,7 +272,16 @@ UINT index;
             }
             else
             {
-                sample_desired_property_callback(NX_NULL, 0, scratch_buf, len, &(json_reader.token), version, context_ptr);
+                sample_desired_property_callback(NX_NULL, 0, scratch_buf, len, json_reader, version, context_ptr);
+
+                if (json_reader.token.kind == AZ_JSON_TOKEN_BEGIN_OBJECT)
+                {
+                    if (az_failed(az_json_reader_skip_children(&json_reader)))
+                    {
+                        printf("Failed to skip children of object\r\n");
+                        return(NX_NOT_SUCCESSFUL);
+                    }
+                }
             }
         }
         else if (json_reader.token.kind == AZ_JSON_TOKEN_BEGIN_OBJECT)
@@ -332,9 +341,9 @@ UINT nx_azure_iot_pnp_helper_build_reported_property(UCHAR *component_name_ptr, 
                                                      UINT *data_copied_length_ptr )
 {
 UINT status;
-az_span buff_span = az_span_init(buffer_ptr, (INT)buffer_len);
+az_span buff_span = az_span_create(buffer_ptr, (INT)buffer_len);
 az_json_writer json_builder;
-az_span component_name = az_span_init(component_name_ptr, (INT)component_name_len);
+az_span component_name = az_span_create(component_name_ptr, (INT)component_name_len);
 
     if (az_succeeded(az_json_writer_init(&json_builder, buff_span, NULL)) &&
         az_succeeded(az_json_writer_append_begin_object(&json_builder)) &&
@@ -347,7 +356,7 @@ az_span component_name = az_span_init(component_name_ptr, (INT)component_name_le
         (component_name_ptr == NX_NULL || az_succeeded(az_json_writer_append_end_object(&json_builder))) &&
         az_succeeded(az_json_writer_append_end_object(&json_builder)))
     {
-        *data_copied_length_ptr  = (UINT)az_span_size(az_json_writer_get_json(&json_builder));
+        *data_copied_length_ptr  = (UINT)az_span_size(az_json_writer_get_bytes_used_in_destination(&json_builder));
         status = NX_AZURE_IOT_SUCCESS;
     }
     else
@@ -371,11 +380,11 @@ UINT nx_azure_iot_pnp_helper_build_reported_property_with_status(UCHAR *componen
                                                                  UINT buffer_len,
                                                                  UINT *byte_copied)
 {
-az_span buff_span = az_span_init(buffer_ptr, (INT)buffer_len);
+az_span buff_span = az_span_create(buffer_ptr, (INT)buffer_len);
 az_json_writer json_builder;
-az_span component_name = az_span_init(component_name_ptr, (INT)component_name_len);
-az_span reported_property_name = az_span_init(property_name_ptr, (INT)property_name_len);
-az_span description = az_span_init(description_ptr, (INT)description_len);
+az_span component_name = az_span_create(component_name_ptr, (INT)component_name_len);
+az_span reported_property_name = az_span_create(property_name_ptr, (INT)property_name_len);
+az_span description = az_span_create(description_ptr, (INT)description_len);
 
     if (az_failed(az_json_writer_init(&json_builder, buff_span, NULL)) ||
         az_failed(az_json_writer_append_begin_object(&json_builder)))
@@ -418,7 +427,7 @@ az_span description = az_span_init(description_ptr, (INT)description_len);
         return(NX_NOT_SUCCESSFUL);
     }
 
-    *byte_copied = (UINT)az_span_size(az_json_writer_get_json(&json_builder));
+    *byte_copied = (UINT)az_span_size(az_json_writer_get_bytes_used_in_destination(&json_builder));
 
     return(NX_AZURE_IOT_SUCCESS);
 }

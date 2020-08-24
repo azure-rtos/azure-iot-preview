@@ -75,10 +75,24 @@ typedef struct SAMPLE_CONTEXT_STRUCT
     ULONG                               last_periodic_action_tick;
 
     TX_EVENT_FLAGS_GROUP                sample_events;
-    NX_AZURE_IOT_HUB_CLIENT             iothub_client;
+
+    /* Generally, IoTHub Client and DPS Client do not run at the same time, user can use union as below to
+       share the memory between IoTHub Client and DPS Client.
+
+       NOTE: If user can not make sure sharing memory is safe, IoTHub Client and DPS Client must be defined seperately.  */
+    union SAMPLE_CLIENT_UNION
+    {
+        NX_AZURE_IOT_HUB_CLIENT             iothub_client;
 #ifdef ENABLE_DPS_SAMPLE
-    NX_AZURE_IOT_PROVISIONING_CLIENT    prov_client;
+        NX_AZURE_IOT_PROVISIONING_CLIENT    prov_client;
 #endif /* ENABLE_DPS_SAMPLE */
+    } client;
+
+#define iothub_client client.iothub_client
+#ifdef ENABLE_DPS_SAMPLE
+#define prov_client client.prov_client
+#endif /* ENABLE_DPS_SAMPLE */
+
 } SAMPLE_CONTEXT;
 
 VOID sample_entry(NX_IP *ip_ptr, NX_PACKET_POOL *pool_ptr, NX_DNS *dns_ptr, UINT (*unix_time_callback)(ULONG *unix_time));
@@ -154,9 +168,9 @@ static UINT sample_pnp_temp_controller_reboot_command(NX_PACKET *packet_ptr, UCH
 {
 INT delay;
 az_json_reader jp;
-az_span payload_span = az_span_init(packet_ptr -> nx_packet_prepend_ptr,
-                                    (INT)(packet_ptr -> nx_packet_append_ptr -
-                                          packet_ptr -> nx_packet_prepend_ptr));
+az_span payload_span = az_span_create(packet_ptr -> nx_packet_prepend_ptr,
+                                      (INT)(packet_ptr -> nx_packet_append_ptr -
+                                            packet_ptr -> nx_packet_prepend_ptr));
 
     NX_PARAMETER_NOT_USED(buffer);
     NX_PARAMETER_NOT_USED(buffer_size);
@@ -211,7 +225,7 @@ INT working_set;
         return(NX_NOT_SUCCESSFUL);
     }
 
-    buffer_length = (UINT)az_span_size(az_json_writer_get_json(&json_writer));
+    buffer_length = (UINT)az_span_size(az_json_writer_get_bytes_used_in_destination(&json_writer));
     if ((status = nx_azure_iot_hub_client_telemetry_send(iothub_client_ptr, packet_ptr,
                                                          (UCHAR *)scratch_buffer, buffer_length, NX_WAIT_FOREVER)))
     {
@@ -734,7 +748,7 @@ UCHAR *pnp_command_name_ptr;
 
 static VOID sample_desired_property_callback(UCHAR *component_name_ptr, UINT component_name_len,
                                              UCHAR *property_name_ptr, UINT property_name_len,
-                                             az_json_token *propertyValue, UINT version,
+                                             az_json_reader property_value_reader, UINT version,
                                              VOID *userContextCallback)
 {
     if (component_name_ptr == NULL || component_name_len == 0)
@@ -748,7 +762,7 @@ static VOID sample_desired_property_callback(UCHAR *component_name_ptr, UINT com
                                                            (NX_AZURE_IOT_HUB_CLIENT *)userContextCallback,
                                                            component_name_ptr, component_name_len,
                                                            property_name_ptr, property_name_len,
-                                                           propertyValue, version) == NX_AZURE_IOT_SUCCESS)
+                                                           &property_value_reader, version) == NX_AZURE_IOT_SUCCESS)
     {
         printf("property updated of thermostat 1\r\n");
     }
@@ -756,7 +770,7 @@ static VOID sample_desired_property_callback(UCHAR *component_name_ptr, UINT com
                                                            (NX_AZURE_IOT_HUB_CLIENT *)userContextCallback,
                                                            component_name_ptr, component_name_len,
                                                            property_name_ptr, property_name_len,
-                                                           propertyValue, version) == NX_AZURE_IOT_SUCCESS)
+                                                           &property_value_reader, version) == NX_AZURE_IOT_SUCCESS)
     {
         printf("property updated of thermostat 2\r\n");
     }

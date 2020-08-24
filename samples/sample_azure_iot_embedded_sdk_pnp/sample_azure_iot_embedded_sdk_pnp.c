@@ -72,10 +72,24 @@ typedef struct SAMPLE_CONTEXT_STRUCT
     ULONG                               last_periodic_action_tick;
 
     TX_EVENT_FLAGS_GROUP                sample_events;
-    NX_AZURE_IOT_HUB_CLIENT             iothub_client;
+
+    /* Generally, IoTHub Client and DPS Client do not run at the same time, user can use union as below to
+       share the memory between IoTHub Client and DPS Client.
+
+       NOTE: If user can not make sure sharing memory is safe, IoTHub Client and DPS Client must be defined seperately.  */
+    union SAMPLE_CLIENT_UNION
+    {
+        NX_AZURE_IOT_HUB_CLIENT             iothub_client;
 #ifdef ENABLE_DPS_SAMPLE
-    NX_AZURE_IOT_PROVISIONING_CLIENT    prov_client;
+        NX_AZURE_IOT_PROVISIONING_CLIENT    prov_client;
 #endif /* ENABLE_DPS_SAMPLE */
+    } client;
+
+#define iothub_client client.iothub_client
+#ifdef ENABLE_DPS_SAMPLE
+#define prov_client client.prov_client
+#endif /* ENABLE_DPS_SAMPLE */
+
 } SAMPLE_CONTEXT;
 
 void sample_entry(NX_IP *ip_ptr, NX_PACKET_POOL *pool_ptr, NX_DNS *dns_ptr, UINT (*unix_time_callback)(ULONG *unix_time));
@@ -190,7 +204,7 @@ static UINT sample_build_reported_property(UCHAR *buffer_ptr, UINT buffer_size,
                                            UINT *bytes_copied, double temp)
 {
 UINT ret;
-az_span buff_span = az_span_init(buffer_ptr, (INT)buffer_size);
+az_span buff_span = az_span_create(buffer_ptr, (INT)buffer_size);
 az_json_writer json_builder;
 
     if (!az_failed(az_json_writer_init(&json_builder, buff_span, NULL)) &&
@@ -199,8 +213,7 @@ az_json_writer json_builder;
         !az_failed(az_json_writer_append_double(&json_builder, temp, DOUBLE_DECIMAL_PLACE_DIGITS)) &&
         !az_failed(az_json_writer_append_end_object(&json_builder)))
     {
-        buff_span = az_json_writer_get_json(&json_builder);
-        *bytes_copied = (UINT)az_span_size(buff_span);
+        *bytes_copied = (UINT)az_span_size(az_json_writer_get_bytes_used_in_destination(&json_builder));
         ret = 0;
     }
     else
@@ -216,7 +229,7 @@ az_json_writer json_builder;
 static VOID sample_send_target_temperature_report(SAMPLE_CONTEXT *context, double current_device_temp_value,
                                                   UINT status, UINT version, az_span description)
 {
-az_span buff_span = az_span_init(scratch_buffer, sizeof(scratch_buffer));
+az_span buff_span = az_span_create(scratch_buffer, sizeof(scratch_buffer));
 az_json_writer json_builder;
 UINT bytes_copied;
 UINT response_status;
@@ -237,8 +250,7 @@ UINT request_id;
         !az_failed(az_json_writer_append_end_object(&json_builder)) &&
         !az_failed(az_json_writer_append_end_object(&json_builder)))
     {
-        buff_span = az_json_writer_get_json(&json_builder);
-        bytes_copied = (UINT)az_span_size(buff_span);
+        bytes_copied = (UINT)az_span_size(az_json_writer_get_bytes_used_in_destination(&json_builder));
         if (nx_azure_iot_hub_client_device_twin_reported_properties_send(&(context -> iothub_client),
                                                                          scratch_buffer, bytes_copied,
                                                                          &request_id, &response_status,
@@ -264,8 +276,8 @@ az_json_reader copy_json_reader;
         return(NX_AZURE_IOT_NOT_SUPPORTED);
     }
 
-    twin_span = az_span_init(packet_ptr -> nx_packet_prepend_ptr,
-                             (INT)packet_ptr -> nx_packet_length);
+    twin_span = az_span_create(packet_ptr -> nx_packet_prepend_ptr,
+                               (INT)packet_ptr -> nx_packet_length);
 
     if (az_failed(az_json_reader_init(&json_reader, twin_span, NX_NULL)) ||
         az_failed(az_json_reader_next_token(&json_reader)))
@@ -323,11 +335,11 @@ static UINT sample_get_maxmin_report(NX_PACKET *packet_ptr, UCHAR *buffer, UINT 
 UINT status;
 az_json_writer json_builder;
 az_json_reader jp;
-az_span response = az_span_init(buffer, (INT)buffer_size);
+az_span response = az_span_create(buffer, (INT)buffer_size);
 az_span start_time_span = fake_start_report_time;
-az_span payload_span = az_span_init(packet_ptr -> nx_packet_prepend_ptr,
-                                    (INT)(packet_ptr -> nx_packet_append_ptr -
-                                          packet_ptr -> nx_packet_prepend_ptr));
+az_span payload_span = az_span_create(packet_ptr -> nx_packet_prepend_ptr,
+                                      (INT)(packet_ptr -> nx_packet_append_ptr -
+                                            packet_ptr -> nx_packet_prepend_ptr));
 INT len;
 UCHAR time_buf[32];
 
@@ -340,7 +352,7 @@ UCHAR time_buf[32];
              return(NX_NOT_SUCCESSFUL);
         }
 
-        start_time_span = az_span_init(time_buf, len);
+        start_time_span = az_span_create(time_buf, len);
     }
 
     /* Build the method response payload */
@@ -359,7 +371,7 @@ UCHAR time_buf[32];
         az_succeeded(az_json_writer_append_end_object(&json_builder)))
     {
         status = NX_AZURE_IOT_SUCCESS;
-        *bytes_copied = (UINT)az_span_size(az_json_writer_get_json(&json_builder));
+        *bytes_copied = (UINT)az_span_size(az_json_writer_get_bytes_used_in_destination(&json_builder));
     }
     else
     {
@@ -889,7 +901,7 @@ UINT buffer_length;
         return;
     }
 
-    buffer_length = (UINT)az_span_size(az_json_writer_get_json(&json_builder));
+    buffer_length = (UINT)az_span_size(az_json_writer_get_bytes_used_in_destination(&json_builder));
     if ((status = nx_azure_iot_hub_client_telemetry_send(&(context -> iothub_client), packet_ptr,
                                                          (UCHAR *)scratch_buffer, buffer_length, SAMPLE_WAIT_OPTION)))
     {
