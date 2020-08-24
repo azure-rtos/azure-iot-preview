@@ -9,7 +9,7 @@
 /*                                                                        */
 /**************************************************************************/
 
-/* Version: 6.0 Preview 2 */
+/* Version: 6.0 Preview 3 */
 
 /**
  * @file nx_azure_iot_provisioning_client.h
@@ -98,6 +98,8 @@ typedef struct NX_AZURE_IOT_PROVISIONING_CLIENT_STRUCT
     UINT                                    nx_azure_iot_provisioning_client_endpoint_length;
     UCHAR                                  *nx_azure_iot_provisioning_client_id_scope;
     UINT                                    nx_azure_iot_provisioning_client_id_scope_length;
+    UCHAR                                  *nx_azure_iot_provisioning_client_registration_payload;
+    UINT                                    nx_azure_iot_provisioning_client_registration_payload_length;
     UCHAR                                  *nx_azure_iot_provisioning_client_registration_id;
     UINT                                    nx_azure_iot_provisioning_client_registration_id_length;
     UCHAR                                  *nx_azure_iot_provisioning_client_symmetric_key;
@@ -224,6 +226,20 @@ UINT nx_azure_iot_provisioning_client_completion_callback_set(NX_AZURE_IOT_PROVI
                                                               VOID (*on_complete_callback)(
                                                                     struct NX_AZURE_IOT_PROVISIONING_CLIENT_STRUCT *client_ptr,
                                                                     UINT status));
+
+/**
+ * @brief Set registration payload
+ * @details This routine sets registration payload, which is JSON object.
+ *
+ * @param[in] prov_client_ptr A pointer to a #NX_AZURE_IOT_PROVISIONING_CLIENT.
+ * @param[in] payload_ptr A pointer to registration payload.
+ * @param[in] payload_length Length of `payload`. Does not include the `NULL` terminator.
+ * @return A `UINT` with the result of the API.
+ *  @retval #NX_AZURE_IOT_SUCCESS Successfully set registration payload to Azure IoT Provisioning Client.
+ *  @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to set registration payload Azure IoT Provisioning Client due to invalid parameter.
+ */
+UINT nx_azure_iot_provisioning_client_registration_payload_set(NX_AZURE_IOT_PROVISIONING_CLIENT *prov_client_ptr,
+                                                               UCHAR *payload_ptr, UINT payload_length);
 
 /**
  * @brief Get IoTHub device info into user supplied buffer.

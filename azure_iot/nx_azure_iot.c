@@ -9,9 +9,12 @@
 /*                                                                        */
 /**************************************************************************/
 
-/* Version: 6.0 Preview 2 */
+/* Version: 6.0 Preview 3 */
 
 #include "nx_azure_iot.h"
+#ifndef NX_AZURE_DISABLE_IOT_SECURITY_MODULE
+#include "nx_azure_iot_security_module.h"
+#endif /* NX_AZURE_DISABLE_IOT_SECURITY_MODULE */
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -117,16 +120,16 @@ UCHAR buffer[10] = { 0 };
 az_span span;
 az_span num_span;
 
-    span = az_span_init(type_ptr, (INT)type_len);
+    span = az_span_create(type_ptr, (INT)type_len);
     _az_LOG_WRITE(AZ_LOG_IOT_AZURERTOS, span);
 
     if (msg_len >= 2 && (msg_ptr[msg_len - 2] == '%') && (msg_ptr[msg_len - 1] == 'd'))
     {
-        span = az_span_init((UCHAR *)msg_ptr, (INT)(msg_len - 2));
+        span = az_span_create((UCHAR *)msg_ptr, (INT)(msg_len - 2));
         _az_LOG_WRITE(AZ_LOG_IOT_AZURERTOS, span);
 
         va_start(ap, msg_len);
-        num_span = az_span_init(buffer, sizeof(buffer));
+        num_span = az_span_create(buffer, sizeof(buffer));
         if (!az_failed(az_span_u32toa(num_span, va_arg(ap, UINT), &span)))
         {
             num_span = az_span_slice(num_span, 0, (INT)sizeof(buffer) - az_span_size(span));
@@ -136,7 +139,7 @@ az_span num_span;
     }
     else
     {
-        span = az_span_init((UCHAR *)msg_ptr, (INT)msg_len);
+        span = az_span_create((UCHAR *)msg_ptr, (INT)msg_len);
         _az_LOG_WRITE(AZ_LOG_IOT_AZURERTOS, span);
     }
 
@@ -276,6 +279,17 @@ UINT status;
     /* Set created IoT pointer.  */
     _nx_azure_iot_created_ptr = nx_azure_iot_ptr;
 
+#ifndef NX_AZURE_DISABLE_IOT_SECURITY_MODULE
+    /* Enable Azure IoT Security Module. */
+    status = nx_azure_iot_security_module_enable(nx_azure_iot_ptr);
+    if (status)
+    {
+        LogError(LogLiteralArgs("IoT failed to enable IoT Security Module, status: %d"), status);
+        nx_azure_iot_delete(nx_azure_iot_ptr);
+        return(status);
+    }
+#endif
+
     return(NX_AZURE_IOT_SUCCESS);
 }
 
@@ -294,6 +308,16 @@ UINT status;
         LogError(LogLiteralArgs("IoT delete fail: Resource NOT DELETED"));
         return(NX_AZURE_IOT_DELETE_ERROR);
     }
+
+#ifndef NX_AZURE_DISABLE_IOT_SECURITY_MODULE
+    /* Disable IoT Security Module. */
+    status = nx_azure_iot_security_module_disable(nx_azure_iot_ptr);
+    if (status != NX_AZURE_IOT_SUCCESS)
+    {
+        LogError(LogLiteralArgs("IoT failed to disable IoT Security Module, status: %d"), status);
+        return(status);
+    }
+#endif
 
     /* Deregister SDK module on cloud helper.  */
     nx_cloud_module_deregister(&(nx_azure_iot_ptr -> nx_azure_iot_cloud), &(nx_azure_iot_ptr -> nx_azure_iot_cloud_module));

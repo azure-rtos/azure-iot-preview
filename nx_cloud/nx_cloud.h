@@ -66,7 +66,7 @@ extern   "C" {
 /* Define CLOUD constants.  */
 #define NX_CLOUD_ID                                     ((ULONG)0x434C4F44)
 
-    
+
 /* API return values.  */
 #define NX_CLOUD_MODULE_ALREADY_REGISTERED              0xF0
 #define NX_CLOUD_MODULE_NOT_REGISTERED                  0xF1
@@ -75,16 +75,16 @@ extern   "C" {
 
 
 /* Define events processed by cloud helper. */
-#define NX_CLOUD_ALL_EVENTS                             0xFFFFFFFF      /* All event flags.             */
+#define NX_CLOUD_ALL_EVENTS                             0xFFFFFFFF      /* All event flags.                */
 
 /* Define the common events for all modules.  */
-#define NX_CLOUD_COMMON_PERIODIC_EVENT                  0x00000001u     /* Periodic event, 1s           */
+#define NX_CLOUD_COMMON_PERIODIC_EVENT                  0x00000001u     /* Periodic event, 1s              */
 
 /* Define the module events.  */
-#define NX_CLOUD_MODULE_MQTT_EVENT                      0x00010000u     /* MQTT event                   */
-#define NX_CLOUD_MODULE_AZURE_SDK_EVENT                 0x00020000u     /* Azure SDK event              */
-#define NX_CLOUD_MODULE_AZURE_OTA_EVENT                 0x00040000u     /* Azure OTA event              */
-#define NX_CLOUD_MODULE_AZURE_ASC_EVENT                 0x00080000u     /* Azure ASC event              */
+#define NX_CLOUD_MODULE_MQTT_EVENT                      0x00010000u     /* MQTT event                      */
+#define NX_CLOUD_MODULE_AZURE_SDK_EVENT                 0x00020000u     /* Azure SDK event                 */
+#define NX_CLOUD_MODULE_AZURE_ADU_EVENT                 0x00040000u     /* Azure Device Update event       */
+#define NX_CLOUD_MODULE_AZURE_ISM_EVENT                 0x00080000u     /* Azure IoT Security Module event */
 
 
 /* Define the all common events.  */
@@ -113,7 +113,7 @@ typedef struct NX_CLOUD_MODULE_STRUCT
 
     /* Define the next pointer of created module.  */
     struct NX_CLOUD_MODULE_STRUCT  *nx_cloud_module_next;
-    
+
     /* Define the cloud pointer associated with the module.  */
     struct NX_CLOUD_STRUCT         *nx_cloud_ptr;
 
@@ -121,7 +121,7 @@ typedef struct NX_CLOUD_MODULE_STRUCT
 
 typedef struct NX_CLOUD_STRUCT
 {
-    
+
     /* Define the cloud ID.  */
     ULONG                           nx_cloud_id;
 
@@ -130,19 +130,19 @@ typedef struct NX_CLOUD_STRUCT
 
     /* Define the cloud helper thread that process cloud modules.  */
     TX_THREAD                       nx_cloud_thread;
-    
+
     /* Define the event flags that are used to stimulate the cloud helper
        thread.  */
     TX_EVENT_FLAGS_GROUP            nx_cloud_events;
-    
+
     /* Define the internal mutex used for protection .  */
-    TX_MUTEX                        nx_cloud_mutex;    
+    TX_MUTEX                        nx_cloud_mutex;
 
     /* Define the periodic timer for cloud modules.  */
     TX_TIMER                        nx_cloud_periodic_timer;
 
     /* Define the head pointer of the created module list.  */
-    NX_CLOUD_MODULE                *nx_cloud_modules_list_header;    
+    NX_CLOUD_MODULE                *nx_cloud_modules_list_header;
 
     /* Define the number of created module instances.  */
     ULONG                           nx_cloud_modules_count;

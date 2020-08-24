@@ -9,7 +9,7 @@
 /*                                                                        */
 /**************************************************************************/
 
-/* Version: 6.0 Preview 2 */
+/* Version: 6.0 Preview 3 */
 
 /**
  * @file nx_azure_iot_hub_client.h
@@ -62,8 +62,20 @@ extern   "C" {
 
 /* Set the default token expiry in secs.  */
 #ifndef NX_AZURE_IOT_HUB_CLIENT_TOKEN_EXPIRY
-#define NX_AZURE_IOT_HUB_CLIENT_TOKEN_EXPIRY            (3600)
+#define NX_AZURE_IOT_HUB_CLIENT_TOKEN_EXPIRY                    (3600)
 #endif /* NX_AZURE_IOT_HUB_CLIENT_TOKEN_EXPIRY */
+
+#ifndef NX_AZURE_IOT_HUB_CLIENT_MAX_BACKOFF_IN_SEC
+#define NX_AZURE_IOT_HUB_CLIENT_MAX_BACKOFF_IN_SEC              (10 * 60)
+#endif /* NX_AZURE_IOT_HUB_CLIENT_MAX_BACKOFF_IN_SEC */
+
+#ifndef NX_AZURE_IOT_HUB_CLIENT_INITIAL_BACKOFF_IN_SEC
+#define NX_AZURE_IOT_HUB_CLIENT_INITIAL_BACKOFF_IN_SEC          (3)
+#endif /* NX_AZURE_IOT_HUB_CLIENT_INITIAL_BACKOFF_IN_SEC */
+
+#ifndef NX_AZURE_IOT_HUB_CLIENT_MAX_BACKOFF_JITTER_PERCENT
+#define NX_AZURE_IOT_HUB_CLIENT_MAX_BACKOFF_JITTER_PERCENT      (60)
+#endif /* NX_AZURE_IOT_HUB_CLIENT_MAX_BACKOFF_JITTER_PERCENT */
 
 /* Define AZ IoT Hub Client state.  */
 /**< The client is not connected */
@@ -140,6 +152,8 @@ typedef struct NX_AZURE_IOT_HUB_CLIENT_STRUCT
     UCHAR                                   reserved[3];
 
     az_iot_hub_client                       iot_hub_client_core;
+    UINT                                    nx_azure_iot_hub_client_throttle_count;
+    ULONG                                   nx_azure_iot_hub_client_throttle_end_time;
 } NX_AZURE_IOT_HUB_CLIENT;
 
 
@@ -496,7 +510,7 @@ UINT nx_azure_iot_hub_client_device_twin_disable(NX_AZURE_IOT_HUB_CLIENT *hub_cl
  * @param[in] callback_args Pointer to an argument passed to callback function.
  * @return A `UINT` with the result of the API.
  *   @retval #NX_AZURE_IOT_SUCCESS Successful if callback function is set.
- *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to disable device twin feature due to invalid parameter.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER Fail to set callback due to invalid parameter.
  */
 UINT nx_azure_iot_hub_client_report_properties_response_callback_set(NX_AZURE_IOT_HUB_CLIENT *hub_client_ptr,
                                                                      VOID (*callback_ptr)(

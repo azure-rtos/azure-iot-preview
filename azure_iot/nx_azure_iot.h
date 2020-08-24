@@ -9,7 +9,7 @@
 /*                                                                        */
 /**************************************************************************/
 
-/* Version: 6.0 Preview 2 */
+/* Version: 6.0 Preview 3 */
 
 /**
  * @file nx_azure_iot.h
@@ -88,6 +88,9 @@ UINT nx_azure_iot_log(UCHAR *type_ptr, UINT type_len, UCHAR *msg_ptr, UINT msg_l
 /* API return values.  */
 /**< The operation was successful. */
 #define NX_AZURE_IOT_SUCCESS                              0x0
+
+/**< The operation was unsuccessful. */
+#define NX_AZURE_IOT_FAILURE                              0x20000
 #define NX_AZURE_IOT_SDK_CORE_ERROR                       0x20001
 #define NX_AZURE_IOT_INVALID_PARAMETER                    0x20002
 #define NX_AZURE_IOT_INSUFFICIENT_BUFFER_SPACE            0x20003
@@ -112,7 +115,7 @@ UINT nx_azure_iot_log(UCHAR *type_ptr, UINT type_len, UCHAR *msg_ptr, UINT msg_l
 #define NX_AZURE_IOT_WRONG_STATE                          0x20012
 #define NX_AZURE_IOT_DELETE_ERROR                         0x20013
 #define NX_AZURE_IOT_NO_SUBSCRIBE_ACK                     0x20014
-
+#define NX_AZURE_IOT_THROTTLED                            0x20015
 
 /* Resource type managed by AZ_IOT.  */
 #define NX_AZURE_IOT_RESOURCE_IOT_HUB                     0x1
@@ -120,7 +123,7 @@ UINT nx_azure_iot_log(UCHAR *type_ptr, UINT type_len, UCHAR *msg_ptr, UINT msg_l
 
 /* Define the packet buffer for THREADX TLS.  */
 #ifndef NX_AZURE_IOT_TLS_PACKET_BUFFER_SIZE
-#define NX_AZURE_IOT_TLS_PACKET_BUFFER_SIZE               (1024 * 5)
+#define NX_AZURE_IOT_TLS_PACKET_BUFFER_SIZE               (1024 * 7)
 #endif /* NX_AZURE_IOT_TLS_PACKET_BUFFER_SIZE  */
 
 /* Define MQTT keep alive in seconds. 0 means the keep alive is disabled.
@@ -238,7 +241,7 @@ UINT nx_azure_iot_unix_time_get(NX_AZURE_IOT *nx_azure_iot_ptr, ULONG *unix_time
 
 /**
  * @brief Initialize logging
- * 
+ *
  * @details This routine initialized the logging with customer specific callback to output the logs for different
  *          classifications:
  *          - AZ_LOG_IOT_AZURERTOS,
@@ -246,9 +249,9 @@ UINT nx_azure_iot_unix_time_get(NX_AZURE_IOT *nx_azure_iot_ptr, ULONG *unix_time
  *          - AZ_LOG_MQTT_RECEIVED_PAYLOAD,
  *          - AZ_LOG_IOT_RETRY,
  *          - AZ_LOG_IOT_SAS_TOKEN
- * 
+ *
  * @param[in] log_callback A pointer to a callback.
- * 
+ *
  */
 VOID nx_azure_iot_log_init(VOID(*log_callback)(az_log_classification classification, UCHAR *msg, UINT msg_len));
 

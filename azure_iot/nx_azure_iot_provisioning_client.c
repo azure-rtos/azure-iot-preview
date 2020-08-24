@@ -9,7 +9,7 @@
 /*                                                                        */
 /**************************************************************************/
 
-/* Version: 6.0 Preview 2 */
+/* Version: 6.0 Preview 3 */
 
 #include "nx_azure_iot_provisioning_client.h"
 
@@ -28,7 +28,9 @@
 /* Define AZ IoT Provisioning Client topic format. */
 #define NX_AZURE_IOT_PROVISIONING_CLIENT_REG_SUB_TOPIC                "$dps/registrations/res/#"
 #define NX_AZURE_IOT_PROVISIONING_CLIENT_PAYLOAD_START                "{\"registrationId\" : \""
-#define NX_AZURE_IOT_PROVISIONING_CLIENT_PAYLOAD_END                  "\"}"
+#define NX_AZURE_IOT_PROVISIONING_CLIENT_QUOTE                        "\""
+#define NX_AZURE_IOT_PROVISIONING_CLIENT_CUSTOM_PAYLOAD                ", \"payload\" : "
+#define NX_AZURE_IOT_PROVISIONING_CLIENT_PAYLOAD_END                  "}"
 #define NX_AZURE_IOT_PROVISIONING_CLIENT_POLICY_NAME                  "registration"
 
 /* Set the default timeout for connecting on cloud thread. */
@@ -40,6 +42,11 @@
 #ifndef NX_AZURE_IOT_PROVISIONING_CLIENT_DEFAULT_RETRY
 #define NX_AZURE_IOT_PROVISIONING_CLIENT_DEFAULT_RETRY                (3)
 #endif /* NX_AZURE_IOT_PROVISIONING_CLIENT_DEFAULT_RETRY */
+
+/* Set default PROVISIONING CLIENT wait option. */
+#ifndef NX_AZURE_IOT_PROVISIONING_CLIENT_CONNECT_WAIT_OPTION
+#define NX_AZURE_IOT_PROVISIONING_CLIENT_CONNECT_WAIT_OPTION          (NX_NO_WAIT)
+#endif /* NX_AZURE_IOT_PROVISIONING_CLIENT_CONNECT_WAIT_OPTION */
 
 static UINT nx_azure_iot_provisioning_client_connect_internal(NX_AZURE_IOT_PROVISIONING_CLIENT *prov_client_ptr,
                                                               UINT wait_option);
@@ -84,8 +91,8 @@ UINT status;
         return(NX_AZURE_IOT_MESSAGE_TOO_LONG);
     }
 
-    received_topic = az_span_init(packet_ptr -> nx_packet_prepend_ptr + topic_offset, (INT)topic_length);
-    received_payload = az_span_init(packet_ptr -> nx_packet_prepend_ptr + message_offset, (INT)message_length);
+    received_topic = az_span_create(packet_ptr -> nx_packet_prepend_ptr + topic_offset, (INT)topic_length);
+    received_payload = az_span_create(packet_ptr -> nx_packet_prepend_ptr + message_offset, (INT)message_length);
     core_result =
       az_iot_provisioning_client_parse_received_topic_and_payload(&(context -> nx_azure_iot_provisioning_client_core),
                                                                   received_topic, received_payload,
@@ -379,7 +386,7 @@ UINT status;
         context -> nx_azure_iot_provisioning_client_resource.resource_mqtt.nxd_mqtt_connect_context = context;
 
         /* Start connect.  */
-        status = nx_azure_iot_provisioning_client_connect_internal(context, NX_NO_WAIT);
+        status = nx_azure_iot_provisioning_client_connect_internal(context, NX_AZURE_IOT_PROVISIONING_CLIENT_CONNECT_WAIT_OPTION);
 
         if (status)
         {
@@ -555,6 +562,71 @@ static VOID nx_azure_iot_provisioning_client_process_disconnect(NX_AZURE_IOT_PRO
     }
 }
 
+static UINT nx_azure_iot_provisioning_client_append_device_reg_payload(NX_AZURE_IOT_PROVISIONING_CLIENT *prov_client_ptr,
+                                                                       NX_PACKET *packet_ptr, UINT wait_option)
+{
+UINT status;
+
+    if ((status = nx_packet_data_append(packet_ptr, NX_AZURE_IOT_PROVISIONING_CLIENT_PAYLOAD_START,
+                                        sizeof(NX_AZURE_IOT_PROVISIONING_CLIENT_PAYLOAD_START) - 1,
+                                        packet_ptr -> nx_packet_pool_owner,
+                                        wait_option)))
+    {
+        LogError(LogLiteralArgs("failed to append data registration payload"));
+        return(status);
+    }
+
+    if ((status = nx_packet_data_append(packet_ptr, prov_client_ptr -> nx_azure_iot_provisioning_client_registration_id,
+                                        prov_client_ptr -> nx_azure_iot_provisioning_client_registration_id_length,
+                                        packet_ptr -> nx_packet_pool_owner,
+                                        wait_option)))
+    {
+        LogError(LogLiteralArgs("failed to append data registration payload"));
+        return(status);
+    }
+
+   if ((status = nx_packet_data_append(packet_ptr, NX_AZURE_IOT_PROVISIONING_CLIENT_QUOTE,
+                                       sizeof(NX_AZURE_IOT_PROVISIONING_CLIENT_QUOTE) - 1,
+                                       packet_ptr -> nx_packet_pool_owner,
+                                       wait_option)))
+    {
+        LogError(LogLiteralArgs("failed to append data"));
+        return(status);
+    }
+
+    if (prov_client_ptr -> nx_azure_iot_provisioning_client_registration_payload != NX_NULL)
+    {
+        if ((status = nx_packet_data_append(packet_ptr, NX_AZURE_IOT_PROVISIONING_CLIENT_CUSTOM_PAYLOAD,
+                                            sizeof(NX_AZURE_IOT_PROVISIONING_CLIENT_CUSTOM_PAYLOAD) - 1,
+                                            packet_ptr -> nx_packet_pool_owner,
+                                            wait_option)))
+        {
+            LogError(LogLiteralArgs("failed to append data registration custom payload"));
+            return(status);
+        }
+
+        if ((status = nx_packet_data_append(packet_ptr,
+                                            prov_client_ptr -> nx_azure_iot_provisioning_client_registration_payload,
+                                            prov_client_ptr -> nx_azure_iot_provisioning_client_registration_payload_length,
+                                            packet_ptr -> nx_packet_pool_owner,
+                                            wait_option)))
+        {
+            LogError(LogLiteralArgs("failed to append data registration custom payload"));
+            return(status);
+        }
+    }
+
+    if ((status = nx_packet_data_append(packet_ptr, NX_AZURE_IOT_PROVISIONING_CLIENT_PAYLOAD_END,
+                                        sizeof(NX_AZURE_IOT_PROVISIONING_CLIENT_PAYLOAD_END) - 1,
+                                        packet_ptr -> nx_packet_pool_owner,
+                                        wait_option)))
+    {
+        LogError(LogLiteralArgs("failed to append data registration end"));
+    }
+
+    return(status);
+}
+
 static UINT nx_azure_iot_provisioning_client_send_req(NX_AZURE_IOT_PROVISIONING_CLIENT *prov_client_ptr,
                                                       az_iot_provisioning_client_register_response const *register_response,
                                                       UINT wait_option)
@@ -616,40 +688,16 @@ az_result core_result;
                                    wait_option);
     if (status)
     {
-        LogError(LogLiteralArgs("failed to append data"));
+        LogError(LogLiteralArgs("failed to append data packet id"));
         nx_packet_release(packet_ptr);
         return(status);
     }
 
-    status = nx_packet_data_append(packet_ptr, NX_AZURE_IOT_PROVISIONING_CLIENT_PAYLOAD_START,
-                                   sizeof(NX_AZURE_IOT_PROVISIONING_CLIENT_PAYLOAD_START) - 1,
-                                   packet_ptr -> nx_packet_pool_owner,
-                                   wait_option);
+    status = nx_azure_iot_provisioning_client_append_device_reg_payload(prov_client_ptr,
+                                                                        packet_ptr, wait_option);
     if (status)
     {
-        LogError(LogLiteralArgs("failed to append data"));
-        nx_packet_release(packet_ptr);
-        return(status);
-    }
-
-    status = nx_packet_data_append(packet_ptr, prov_client_ptr -> nx_azure_iot_provisioning_client_registration_id,
-                                   prov_client_ptr -> nx_azure_iot_provisioning_client_registration_id_length,
-                                   packet_ptr -> nx_packet_pool_owner,
-                                   wait_option);
-    if (status)
-    {
-        LogError(LogLiteralArgs("failed to append data "));
-        nx_packet_release(packet_ptr);
-        return(status);
-    }
-
-    status = nx_packet_data_append(packet_ptr, NX_AZURE_IOT_PROVISIONING_CLIENT_PAYLOAD_END,
-                                   sizeof(NX_AZURE_IOT_PROVISIONING_CLIENT_PAYLOAD_END) - 1,
-                                   packet_ptr -> nx_packet_pool_owner,
-                                   wait_option);
-    if (status)
-    {
-        LogError(LogLiteralArgs("failed to append data "));
+        LogError(LogLiteralArgs("failed to add device registration data"));
         nx_packet_release(packet_ptr);
         return(status);
     }
@@ -712,8 +760,8 @@ az_span buffer_span;
 az_span policy_name = AZ_SPAN_LITERAL_FROM_STR(NX_AZURE_IOT_PROVISIONING_CLIENT_POLICY_NAME);
 
     resource_ptr = &(prov_client_ptr -> nx_azure_iot_provisioning_client_resource);
-    span = az_span_init(resource_ptr -> resource_mqtt_sas_token,
-                        (INT)prov_client_ptr -> nx_azure_iot_provisioning_client_sas_token_buff_size);
+    span = az_span_create(resource_ptr -> resource_mqtt_sas_token,
+                          (INT)prov_client_ptr -> nx_azure_iot_provisioning_client_sas_token_buff_size);
 
     status = nx_azure_iot_buffer_allocate(prov_client_ptr -> nx_azure_iot_ptr,
                                           &buffer_ptr, &buffer_size,
@@ -746,7 +794,7 @@ az_span policy_name = AZ_SPAN_LITERAL_FROM_STR(NX_AZURE_IOT_PROVISIONING_CLIENT_
         return(status);
     }
 
-    buffer_span = az_span_init(output_ptr, (INT)output_len);
+    buffer_span = az_span_create(output_ptr, (INT)output_len);
     core_result = az_iot_provisioning_client_sas_get_password(&(prov_client_ptr -> nx_azure_iot_provisioning_client_core),
                                                               buffer_span, expiry_time_secs, policy_name,
                                                               (CHAR *)resource_ptr -> resource_mqtt_sas_token,
@@ -782,9 +830,9 @@ NX_AZURE_IOT_RESOURCE *resource_ptr;
 UCHAR *buffer_ptr;
 UINT buffer_size;
 VOID *buffer_context;
-az_span endpoint_span = az_span_init(endpoint, (INT)endpoint_length);
-az_span id_scope_span = az_span_init(id_scope, (INT)id_scope_length);
-az_span registration_id_span = az_span_init(registration_id, (INT)registration_id_length);
+az_span endpoint_span = az_span_create(endpoint, (INT)endpoint_length);
+az_span id_scope_span = az_span_create(id_scope, (INT)id_scope_length);
+az_span registration_id_span = az_span_create(registration_id, (INT)registration_id_length);
 
     if ((nx_azure_iot_ptr == NX_NULL) || (prov_client_ptr == NX_NULL) || (endpoint == NX_NULL) ||
         (id_scope == NX_NULL) || (registration_id == NX_NULL) || (endpoint_length == 0) ||
@@ -988,7 +1036,7 @@ UINT status;
 UINT nx_azure_iot_provisioning_client_device_cert_set(NX_AZURE_IOT_PROVISIONING_CLIENT *prov_client_ptr,
                                                       NX_SECURE_X509_CERT *x509_cert)
 {
-    if ((prov_client_ptr == NX_NULL) || (prov_client_ptr -> nx_azure_iot_ptr == NX_NULL))
+    if ((prov_client_ptr == NX_NULL) || (prov_client_ptr -> nx_azure_iot_ptr == NX_NULL) || (x509_cert == NX_NULL))
     {
         LogError(LogLiteralArgs("IoTProvisioning device cert set fail: INVALID POINTER"));
         return(NX_AZURE_IOT_INVALID_PARAMETER);
@@ -1272,6 +1320,26 @@ az_span *assigned_hub_span_ptr;
 
     memcpy((VOID *)device_id, (VOID *)az_span_ptr(*device_id_span_ptr), (UINT)az_span_size(*device_id_span_ptr)); /* Use case of memcpy is verified. */
     *device_id_len = (UINT)az_span_size(*device_id_span_ptr);
+
+    tx_mutex_put(prov_client_ptr -> nx_azure_iot_ptr -> nx_azure_iot_mutex_ptr);
+
+    return(NX_AZURE_IOT_SUCCESS);
+}
+
+UINT nx_azure_iot_provisioning_client_registration_payload_set(NX_AZURE_IOT_PROVISIONING_CLIENT *prov_client_ptr,
+                                                               UCHAR *payload_ptr, UINT payload_length)
+{
+    if ((prov_client_ptr == NX_NULL) || (prov_client_ptr -> nx_azure_iot_ptr == NX_NULL))
+    {
+        LogError(LogLiteralArgs("IoTProvisioning client set custom payload set: Invalid argument"));
+        return(NX_AZURE_IOT_INVALID_PARAMETER);
+    }
+
+    /* Obtain the mutex.  */
+    tx_mutex_get(prov_client_ptr -> nx_azure_iot_ptr -> nx_azure_iot_mutex_ptr, NX_WAIT_FOREVER);
+
+    prov_client_ptr -> nx_azure_iot_provisioning_client_registration_payload = payload_ptr;
+    prov_client_ptr -> nx_azure_iot_provisioning_client_registration_payload_length = payload_length;
 
     tx_mutex_put(prov_client_ptr -> nx_azure_iot_ptr -> nx_azure_iot_mutex_ptr);
 
