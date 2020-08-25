@@ -155,8 +155,8 @@ static const az_span reported_description_property_name = AZ_SPAN_LITERAL_FROM_S
 static const az_span temp_response_description = AZ_SPAN_LITERAL_FROM_STR("success");
 
 /* Fake device data */
-static const az_span fake_start_report_time = AZ_SPAN_LITERAL_FROM_STR("2020-01-10T10:00:00:000Z");
-static const az_span fake_end_report_time = AZ_SPAN_LITERAL_FROM_STR("2023-01-10T10:00:00:000Z");
+static const az_span fake_start_report_time = AZ_SPAN_LITERAL_FROM_STR("2020-01-10T10:00:00Z");
+static const az_span fake_end_report_time = AZ_SPAN_LITERAL_FROM_STR("2023-01-10T10:00:00Z");
 static double current_device_temp = SAMPLE_DEAFULT_START_TEMP_CELSIUS;
 static double last_device_max_tem_reported = 0;
 static double device_temperature_avg_total = 0;
@@ -164,7 +164,7 @@ static int32_t device_temperature_avg_count = 1;
 static double device_max_temp = SAMPLE_DEAFULT_START_TEMP_CELSIUS;
 static double device_min_temp = SAMPLE_DEAFULT_START_TEMP_CELSIUS;
 static double device_avg_temp = SAMPLE_DEAFULT_START_TEMP_CELSIUS;
-static UCHAR scratch_buffer[128];
+static UCHAR scratch_buffer[256];
 
 /* Move reader to the value of property name */
 static UINT sample_json_child_token_move(az_json_reader *json_reader, az_span property_name)
