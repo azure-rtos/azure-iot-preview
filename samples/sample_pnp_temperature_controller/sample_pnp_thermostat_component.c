@@ -36,8 +36,8 @@ static const CHAR temp_response_description_success[] = "success";
 static const CHAR temp_response_description_failed[] = "failed";
 
 /* Fake device data */
-static const az_span fake_start_report_time = AZ_SPAN_LITERAL_FROM_STR("2020-01-10T10:00:00:000Z");
-static const az_span fake_end_report_time = AZ_SPAN_LITERAL_FROM_STR("2023-01-10T10:00:00:000Z");
+static const az_span fake_start_report_time = AZ_SPAN_LITERAL_FROM_STR("2020-01-10T10:00:00Z");
+static const az_span fake_end_report_time = AZ_SPAN_LITERAL_FROM_STR("2023-01-10T10:00:00Z");
 
 static UCHAR scratch_buffer[256];
 
