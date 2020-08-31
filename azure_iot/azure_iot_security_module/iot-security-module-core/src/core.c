@@ -113,13 +113,13 @@ asc_result_t core_collect(core_t *core_ptr)
     bool at_least_one_success = false;
     bool time_passed = false;
 
-    for (   priority_collectors_t *prioritized_collectors = collector_collection_get_head_priority(core_ptr->collector_collection_ptr);
+    for (priority_collectors_t *prioritized_collectors = collector_collection_get_head_priority(core_ptr->collector_collection_ptr);
             prioritized_collectors != NULL;
             prioritized_collectors = collector_collection_get_next_priority(core_ptr->collector_collection_ptr, prioritized_collectors)
         ) {
         linked_list_collector_t_handle collector_list = priority_collectors_get_list(prioritized_collectors);
 
-        for (   collector_t *current_collector=linked_list_collector_t_get_first(collector_list);
+        for (collector_t *current_collector=linked_list_collector_t_get_first(collector_list);
                 current_collector!=NULL;
                 current_collector=current_collector->next
             ) {
@@ -187,6 +187,7 @@ asc_result_t core_message_get(core_t* core_ptr, security_message_t* security_mes
             result = ASC_RESULT_EXCEPTION;
             goto cleanup;
 #else /* DYNAMIC_MEMORY_ENABLED */
+            result = ASC_RESULT_OK;
             log_debug("failed in serializer_buffer_get on first attempt, re-allocating buffer...");
             if (serializer_buffer_get_size(core_ptr->serializer, &core_ptr->message_buffer_size) != ASC_RESULT_OK) {
                 result = ASC_RESULT_EXCEPTION;
@@ -254,9 +255,4 @@ asc_result_t core_message_deinit(core_t *core_ptr)
     core_ptr->message_empty = true;
 
     return ASC_RESULT_OK;
-}
-
-collector_collection_t *core_get_collector_collection(core_t *core_ptr)
-{
-    return core_ptr->collector_collection_ptr;
 }

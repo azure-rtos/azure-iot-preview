@@ -76,7 +76,7 @@ UINT status = NX_AZURE_IOT_SUCCESS;
             goto cleanup;
         }
 
-        /* Register IoT Security module on cloud helper.  */
+        /* Register Azure IoT Security Module on cloud helper.  */
         if ((status = nx_cloud_module_register(
             &(nx_azure_iot_ptr->nx_azure_iot_cloud),
             &(_security_module_ptr->nx_azure_iot_security_module_cloud),
@@ -127,13 +127,14 @@ UINT status = NX_AZURE_IOT_SUCCESS;
         }
         else
         {
+
             /* Set security module state as not initialized. */
             if ((status = _security_module_update_state(_security_module_ptr, SECURITY_MODULE_STATE_NOT_INITIALIZED)))
             {
                 LogError(LogLiteralArgs("Failed to update IoT Security state, error=%d"), status);
             }
 
-            /* Deregister IoT Security Module from cloud helper.  */
+            /* Deregister Azure IoT Security Module from cloud helper.  */
             if (_security_module_ptr->nx_azure_iot_ptr != NULL)
             {
                 if ((status = nx_cloud_module_deregister(
@@ -142,6 +143,7 @@ UINT status = NX_AZURE_IOT_SUCCESS;
                 )))
                 {
                     LogError(LogLiteralArgs("Failed to deregister Azure IoT Security Module, error=%d"), status);
+                    status = NX_AZURE_IOT_FAILURE;
                 }
             }
 

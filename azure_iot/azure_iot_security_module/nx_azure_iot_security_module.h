@@ -31,7 +31,7 @@ extern   "C" {
 /**
  * @brief Azure IoT Security Module state enum
  *
- * state diagram:
+ * @details State diagram:
  *
  *       +--------------+           +--------------+               +--------------+                +------+-------+
  *       |              |           |              +--------+      |              +--------+       |              |
@@ -71,10 +71,12 @@ typedef enum security_module_state
 } security_module_state_t;
 
 
+
 /**
- * @brief Azure IoT Security Module struct
+ * @struct NX_AZURE_IOT_SECURITY_MODULE
  *
- * Azure Security Center for IoT security module provides a comprehensive security solution for Azure RTOS devices.
+ * @details Azure Security Center for IoT security module provides a comprehensive security solution for Azure RTOS devices.
+ *
  * Azure Security Center for IoT security module with Azure RTOS support offers the following features:
  *  - Detection of malicious network activities: Every device inbound and outbound network activity is
  *    monitored (supported protocols: TCP, UDP, ICMP on IPv4 and IPv6). Azure Security Center for IoT inspects each of
@@ -104,26 +106,33 @@ typedef struct NX_AZURE_IOT_SECURITY_MODULE_STRUCT
 
 
 /**
- * @brief Enable IoT Security Module
+ * @brief Enable Azure IoT Security Module
+ *
+ * @details This routine enables the Azure IoT Security Module subsystem. An internal state machine
+ *          manage security events collection and sends them to Azure IoT Hub. Only one NX_AZURE_IOT_SECURITY_MODULE
+ *          instance exists and needed to manage data collection.
  *
  * @param[in] nx_azure_iot_ptr    A pointer to a #NX_AZURE_IOT
  *
  * @return A `UINT` with the result of the API.
- *  @retval #NX_AZURE_IOT_SUCCESS               Successful iff IoT Security Module has been enabled successfully.
- *  @retval #NX_AZURE_IOT_FAILURE               Security Module initialization failure.
- *  @retval #NX_AZURE_IOT_INVALID_PARAMETER     Security module requires valid platform ptr.
+ *   @retval #NX_AZURE_IOT_SUCCESS               Successfully enabled Azure IoT Security Module.
+ *   @retval #NX_AZURE_IOT_FAILURE               Fail to enable Azure IoT Security Module due to internal error.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER     Security module requires valid #NX_AZURE_IOT instance.
  */
 UINT nx_azure_iot_security_module_enable(NX_AZURE_IOT *nx_azure_iot_ptr);
 
 
 /**
- * @brief Disable IoT Security Module
+ * @brief Disable Azure IoT Security Module
+ *
+ * @details This routine disables the Azure IoT Security Module subsystem.
  *
  * @param[in] nx_azure_iot_ptr    A pointer to a #NX_AZURE_IOT, if NULL the singleton instance will be disabled.
  *
  * @return A `UINT` with the result of the API.
- *  @retval #NX_AZURE_IOT_SUCCESS               Successful iff IoT Security Module has been disabled successfully.
- *  @retval #NX_AZURE_IOT_INVALID_PARAMETER     Azure IoT Hub ptr instance is differ than the singleton composite instance.
+ *   @retval #NX_AZURE_IOT_SUCCESS               Successful if Azure IoT Security Module has been disabled successfully.
+ *   @retval #NX_AZURE_IOT_INVALID_PARAMETER     Azure IoT Hub instance differ than the singleton composite instance.
+ *   @retval #NX_AZURE_IOT_FAILURE               Fail to disable Azure IoT Security Module due to internal error.
  */
 UINT nx_azure_iot_security_module_disable(NX_AZURE_IOT *nx_azure_iot_ptr);
 

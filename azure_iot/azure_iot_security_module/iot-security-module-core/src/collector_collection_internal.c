@@ -73,16 +73,19 @@ static asc_result_t collector_collection_internal_set_random_collected_time(prio
     uint32_t collector_interval = priority_collectors_get_interval(priority_collector_ptr);
     collector_t *collector_ptr = linked_list_collector_t_get_first(priority_collector_list);
     uint32_t current_time = itime_time(NULL);
+    uint32_t last_collected_timestamp;
 
-    while (collector_ptr != NULL) {              
 #ifdef ASC_FIRST_FORCE_COLLECTION_INTERVAL
-        collector_set_last_collected_timestamp(collector_ptr, current_time - collector_interval + ASC_FIRST_FORCE_COLLECTION_INTERVAL);
+    last_collected_timestamp = current_time - collector_interval + ASC_FIRST_FORCE_COLLECTION_INTERVAL;
 #else
-        collector_priority_t priority = priority_collectors_get_priority(priority_collector_ptr);
-        uint32_t interval = (uint32_t)((priority+1) * ASC_FIRST_COLLECTION_INTERVAL);
-        uint32_t delta = (uint32_t)(irand_int() % (2 * interval) + interval);
-        collector_set_last_collected_timestamp(collector_ptr, current_time - collector_interval + delta);
+    collector_priority_t priority = priority_collectors_get_priority(priority_collector_ptr);
+    uint32_t interval = (uint32_t)((priority+1) * ASC_FIRST_COLLECTION_INTERVAL);
+    uint32_t delta = (uint32_t)(irand_int() % (2 * interval) + interval);
+    last_collected_timestamp = current_time - collector_interval + delta;
 #endif
+
+    while (collector_ptr != NULL) {
+        collector_set_last_collected_timestamp(collector_ptr, last_collected_timestamp);
         collector_ptr = collector_ptr->next;
     }
 

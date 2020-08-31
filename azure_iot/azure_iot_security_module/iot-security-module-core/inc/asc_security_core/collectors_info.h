@@ -14,6 +14,11 @@
 
 #include <stdint.h>
 
+#ifndef EXTRA_COLLECTORS_OBJECT_POOL_COUNT
+#define COLLECTORS_INFO_SIZE COLLECTOR_TYPE_COUNT
+#else
+#define COLLECTORS_INFO_SIZE (COLLECTOR_TYPE_COUNT + EXTRA_COLLECTORS_OBJECT_POOL_COUNT)
+#endif
 typedef struct {
     uint32_t interval;
 } collector_info_t;

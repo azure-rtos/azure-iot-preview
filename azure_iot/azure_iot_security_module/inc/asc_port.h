@@ -50,4 +50,10 @@
 #define ASC_COLLECTOR_NETWORK_ACTIVITY_MAX_IPV6_OBJECTS_IN_CACHE 64
 #endif
 
+
+/* Serializer custom allocator uses static memory instead of heap memory. Desired behaviour in Azure RTOS devices. */
+#ifndef ASC_SERIALIZER_USE_CUSTOM_ALLOCATOR
+#define ASC_SERIALIZER_USE_CUSTOM_ALLOCATOR
+#endif
+
 #endif /* ASC_PORT_H */

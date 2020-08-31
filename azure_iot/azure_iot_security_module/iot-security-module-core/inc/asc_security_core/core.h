@@ -88,11 +88,4 @@ asc_result_t core_message_get(core_t* core_ptr, security_message_t* security_mes
  */
 asc_result_t core_message_deinit(core_t *core_ptr);
 
-/**
- * @brief returns the collector collection pointed by the core
- *
- * @param core_ptr        the core ptr
- */
-collector_collection_t *core_get_collector_collection(core_t *core_ptr);
-
 #endif /* CORE_H */

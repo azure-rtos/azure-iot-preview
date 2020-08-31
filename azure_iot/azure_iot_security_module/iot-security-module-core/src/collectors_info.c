@@ -20,7 +20,6 @@
 #include "asc_security_core/utils/containerof.h"
 #include "asc_security_core/utils/notifier.h"
 
-#define COLLECTORS_INFO_SIZE COLLECTOR_TYPE_COUNT
 typedef struct notifier_container_t {
     COLLECTION_INTERFACE(struct notifier_container_t);
 
