@@ -201,14 +201,14 @@ UINT  status;
 
     /* Initialize TLS.  */
     nx_secure_tls_initialize();
-    
+
     /* Create sample helper thread. */
     status = tx_thread_create(&sample_helper_thread, "Demo Thread",
                               sample_helper_thread_entry, 0,
                               sample_helper_thread_stack, SAMPLE_HELPER_STACK_SIZE,
-                              SAMPLE_HELPER_THREAD_PRIORITY, SAMPLE_HELPER_THREAD_PRIORITY, 
-                              TX_NO_TIME_SLICE, TX_AUTO_START);    
-    
+                              SAMPLE_HELPER_THREAD_PRIORITY, SAMPLE_HELPER_THREAD_PRIORITY,
+                              TX_NO_TIME_SLICE, TX_AUTO_START);
+
     /* Check status.  */
     if (status)
     {

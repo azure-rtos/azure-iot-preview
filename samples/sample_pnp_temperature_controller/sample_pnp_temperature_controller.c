@@ -67,6 +67,9 @@
 #define SAMPLE_COMMAND_ERROR_STATUS                                     (500)
 #define SAMPLE_COMMAND_NOT_FOUND_STATUS                                 (404)
 
+#define SAMPLE_PNP_MODEL_ID                                             "dtmi:com:example:TemperatureController;1"
+#define SAMPLE_PNP_DPS_PAYLOAD                                          "{\"modelId\":\"" SAMPLE_PNP_MODEL_ID "\"}"
+
 /* Define Sample context.  */
 typedef struct SAMPLE_CONTEXT_STRUCT
 {
@@ -132,7 +135,6 @@ static volatile UINT sample_connection_status = NX_NOT_CONNECTED;
 static UINT exponential_retry_count;
 
 /* PNP model id */
-static const CHAR sample_model_id[] = "dtmi:com:example:TemperatureController;1";
 static SAMPLE_PNP_THERMOSTAT_COMPONENT sample_thermostat_1;
 static const CHAR sample_thermostat_1_component[] = "thermostat1";
 static double sample_thermostat_1_last_device_max_temp_reported;
@@ -576,7 +578,7 @@ NX_AZURE_IOT_HUB_CLIENT *iothub_client_ptr = &(context -> iothub_client);
     {
         printf("device twin desired property callback set!: error code = 0x%08x\r\n", status);
     }
-    else if ((status = nx_azure_iot_hub_client_model_id_set(iothub_client_ptr, (UCHAR *)sample_model_id, sizeof(sample_model_id) - 1)))
+    else if ((status = nx_azure_iot_hub_client_model_id_set(iothub_client_ptr, (UCHAR *)SAMPLE_PNP_MODEL_ID, sizeof(SAMPLE_PNP_MODEL_ID) - 1)))
     {
         printf("digital twin modelId set!: error code = 0x%08x\r\n", status);
     }
@@ -993,7 +995,11 @@ UINT status;
         printf("Failed on nx_azure_iot_hub_client_symmetric_key_set!: error code = 0x%08x\r\n", status);
     }
 #endif /* USE_DEVICE_CERTIFICATE */
-
+    else if ((status = nx_azure_iot_provisioning_client_registration_payload_set(prov_client_ptr, (UCHAR *)SAMPLE_PNP_DPS_PAYLOAD,
+                                                                                 sizeof(SAMPLE_PNP_DPS_PAYLOAD) - 1)))
+    {
+        printf("Failed on nx_azure_iot_provisioning_client_registration_payload_set!: error code = 0x%08x\r\n", status);
+    }
     /* Register device */
     else if ((status = nx_azure_iot_provisioning_client_register(prov_client_ptr, NX_WAIT_FOREVER)))
     {
