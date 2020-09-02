@@ -12,7 +12,7 @@
 #ifndef ASC_PORT_H
 #define ASC_PORT_H
 
-#include "iot_security_module/version.h"
+#include "asc_security_core/version.h"
 
 /* Security Module ID - A unique identifier of the device. */
 #ifndef ASC_SECURITY_MODULE_ID

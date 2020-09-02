@@ -20,8 +20,7 @@ extern   "C" {
 #include "nx_azure_iot.h"
 
 #include "asc_security_core/core.h"
-
-#include "iot_security_module/version.h"
+#include "asc_security_core/version.h"
 
 
 /* Define AZ IoT ASC event flags. These events are processed by the Cloud thread.  */

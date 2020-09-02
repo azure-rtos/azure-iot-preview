@@ -49,8 +49,7 @@ core_t *core_init()
         goto cleanup;
     }
 
-    // FIXME: pass numeric version from build system
-    core_ptr->security_module_version = SECURITY_MODULE_CORE_VERSION;
+    core_ptr->security_module_version = SECURITY_MODULE_VERSION;
 
     core_ptr->collector_collection_ptr = collector_collection_init();
     if (core_ptr->collector_collection_ptr == NULL) {

@@ -9,6 +9,7 @@
 /*                                                                        */
 /**************************************************************************/
 
+#include "asc_security_core/configuration.h"
 #include "asc_security_core/logger.h"
 #include "asc_security_core/model/schema/event_builder.h"
 #include "asc_security_core/serializer.h"
@@ -28,7 +29,14 @@ asc_result_t serializer_event_add_network_activity(serializer_t *serializer, uin
 {
     log_debug("serializer_event_add_network_activity, serializer=[%p], timestamp=[%u], collection_interval=[%u], ipv4_payload=[%p], ipv6_payload=[%p]",
               (void*)serializer, timestamp, collection_interval, (void*)ipv4_payload, (void*)ipv6_payload);
-    
+
+#ifndef ASC_COLLECTOR_NETWORK_ACTIVITY_SEND_EMPTY_EVENTS
+    if (ipv4_payload == NULL && ipv6_payload == NULL) {
+        log_debug("skipping empty network activity event");
+        return ASC_RESULT_OK;
+    }
+#endif
+
     if (serializer == NULL) {
         log_error("failed, bad argument");
         return ASC_RESULT_BAD_ARGUMENT;

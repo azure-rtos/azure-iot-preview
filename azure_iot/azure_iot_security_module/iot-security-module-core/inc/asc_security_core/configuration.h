@@ -55,6 +55,9 @@
 #define ASC_COLLECTOR_NETWORK_ACTIVITY_MAX_IPV6_OBJECTS_IN_CACHE 64
 #endif
 
+// Send empty Network Activity events
+// #define ASC_COLLECTOR_NETWORK_ACTIVITY_SEND_EMPTY_EVENTS
+
 // The size of flatcc emitter page cache, when using custom allocator
 #ifndef EMITTER_PAGE_CACHE_SIZE
 #define EMITTER_PAGE_CACHE_SIZE 1
