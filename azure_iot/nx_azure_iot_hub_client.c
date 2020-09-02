@@ -1678,7 +1678,7 @@ az_result core_result;
     /* Check if the last request was throttled and if the next need to be throttled */
     if ((status = nx_azure_iot_hub_client_throttled_check(hub_client_ptr)))
     {
-        LogError(LogLiteralArgs("IoTHub client device twin publish faild with error %d"), status);
+        LogError(LogLiteralArgs("IoTHub client device twin publish failed with error %d"), status);
         return(status);
     }
 

@@ -19,7 +19,7 @@
 /* Telemetry message property used to indicate the message's component. */
 static const CHAR sample_pnp_telemetry_component_property[] = "$.sub";
 
-/* Reported property response proptery keys */
+/* Reported property response property keys */
 static const az_span sample_pnp_component_type_property_name = AZ_SPAN_LITERAL_FROM_STR("__t");
 static const az_span reported_component_type_value = AZ_SPAN_LITERAL_FROM_STR("c");
 static const az_span reported_value_property_name = AZ_SPAN_LITERAL_FROM_STR("value");
@@ -213,7 +213,7 @@ UINT index;
     if (az_failed(az_json_reader_init(&json_reader, payload, NX_NULL)) ||
         az_failed(az_json_reader_next_token(&json_reader)))
     {
-        printf("Failed to intialize json reader\r\n");
+        printf("Failed to initialize json reader\r\n");
         return(NX_NOT_SUCCESSFUL);
     }
 
@@ -389,7 +389,7 @@ az_span description = az_span_create(description_ptr, (INT)description_len);
     if (az_failed(az_json_writer_init(&json_builder, buff_span, NULL)) ||
         az_failed(az_json_writer_append_begin_object(&json_builder)))
     {
-        printf("Failed intialize json writer \r\n");
+        printf("Failed initializing json writer \r\n");
         return(NX_NOT_SUCCESSFUL);
     }
 

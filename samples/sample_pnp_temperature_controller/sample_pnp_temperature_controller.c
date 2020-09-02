@@ -1153,7 +1153,7 @@ UINT status;
                                              sizeof(sample_thermostat_1_component) - 1,
                                              SAMPLE_DEFAULT_START_TEMP_CELSIUS)))
     {
-        printf("Faild to initialize %s: error code = 0x%08x\r\n",
+        printf("Failed to initialize %s: error code = 0x%08x\r\n",
                sample_thermostat_1_component, status);
     }
     else if ((status = sample_pnp_thermostat_init(&sample_thermostat_2,
@@ -1161,7 +1161,7 @@ UINT status;
                                                   sizeof(sample_thermostat_2_component) - 1,
                                                   SAMPLE_DEFAULT_START_TEMP_CELSIUS)))
     {
-        printf("Faild to initialize %s: error code = 0x%08x\r\n",
+        printf("Failed to initialize %s: error code = 0x%08x\r\n",
                sample_thermostat_2_component, status);
     }
 

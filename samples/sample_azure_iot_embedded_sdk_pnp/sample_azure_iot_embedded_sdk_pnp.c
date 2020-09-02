@@ -282,7 +282,7 @@ az_json_reader copy_json_reader;
     if (az_failed(az_json_reader_init(&json_reader, twin_span, NX_NULL)) ||
         az_failed(az_json_reader_next_token(&json_reader)))
     {
-        printf("Failed to intialize json reader\r\n");
+        printf("Failed to initialize json reader\r\n");
         return(NX_NOT_SUCCESSFUL);
     }
 
@@ -303,7 +303,7 @@ az_json_reader copy_json_reader;
     if (sample_json_child_token_move(&json_reader, desired_temp_property_name) ||
         az_failed(az_json_token_get_double(&(json_reader.token), &parsed_value)))
     {
-        printf("Failed to get temprature property\r\n");
+        printf("Failed to get temperature property\r\n");
         return(NX_NOT_SUCCESSFUL);
     }
 
