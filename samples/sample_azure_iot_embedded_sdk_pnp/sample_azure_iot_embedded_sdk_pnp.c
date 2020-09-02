@@ -303,7 +303,6 @@ az_json_reader copy_json_reader;
     if (sample_json_child_token_move(&json_reader, desired_temp_property_name) ||
         az_failed(az_json_token_get_double(&(json_reader.token), &parsed_value)))
     {
-        printf("Failed to get temperature property\r\n");
         return(NX_NOT_SUCCESSFUL);
     }
 
@@ -862,10 +861,7 @@ NX_PACKET *packet_ptr;
     printf_packet(packet_ptr);
     printf("\r\n");
 
-    if (sample_parse_desired_temp_property(context, packet_ptr, NX_FALSE) != NX_AZURE_IOT_SUCCESS)
-    {
-        printf("Failed to parse value\r\n");
-    }
+    sample_parse_desired_temp_property(context, packet_ptr, NX_FALSE);
 
     nx_packet_release(packet_ptr);
 }
