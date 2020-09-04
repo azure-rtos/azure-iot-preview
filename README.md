@@ -21,7 +21,8 @@ Feature | Azure RTOS SDK for Azure IoT services  | Description
  [Direct Methods](https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-direct-methods) | :heavy_check_mark: | IoT Hub gives you the ability to invoke direct methods on devices from the cloud.  
  [DPS - Device Provisioning Service](https://docs.microsoft.com/azure/iot-dps/) | :heavy_check_mark: | This SDK supports connecting your device to the Device Provisioning Service via, for example, [individual enrollment](https://docs.microsoft.com/azure/iot-dps/concepts-service#enrollment) using an [X.509 leaf certificate](https://docs.microsoft.com/azure/iot-dps/concepts-security#leaf-certificate).  
  Protocol | MQTT | The Azure RTOS SDK for Azure IoT services supports only MQTT.
- [Plug and Play](https://docs.microsoft.com/en-us/azure/iot-pnp/overview-iot-plug-and-play) | :heavy_check_mark: | IoT Plug and Play Preview enables solution developers to integrate devices with their solutions without writing any embedded code. 
+ [Plug and Play](https://docs.microsoft.com/azure/iot-pnp/overview-iot-plug-and-play) | :heavy_check_mark: | IoT Plug and Play Preview enables solution developers to integrate devices with their solutions without writing any embedded code. 
+ [ASC for IoT](https://docs.microsoft.com/azure/asc-for-iot/) | :heavy_check_mark: | The Azure Security Center for IoT security module provides a comprehensive security solution for Azure RTOS devices. 
 
 # Building and using the library
 
@@ -84,7 +85,7 @@ in each ZIP file for licensing requirements.
 
 # Security
 
-Azure RTOS provides OEMs with components to secure communication and to create code and data isolation using underlying MCU/MPU hardware protection mechanisms. It is ultimately the responsibility of the device builder to ensure the device fully meets the evolving security requirements associated with its specific use case.
+Azure RTOS provides OEMs with components to secure communication and to create code and data isolation using underlying MCU/MPU hardware protection mechanisms. It is ultimately the responsibility of the device builder to ensure the device fully meets the evolving security requirements associated with its specific use case. In the meanwhile, with built-in support of [Azure Security Center for IoT](https://docs.microsoft.com/azure/asc-for-iot/iot-security-azure-rtos), you can detect malicious network activities and create baseline with the predefined customer alert rules.
 
 # Licensing
 
