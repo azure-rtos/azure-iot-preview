@@ -3,11 +3,11 @@
 
 # Azure RTOS SDK for Azure IoT
 
-This repository contains SDK for Azure IoT services. SDK uses [ThreadX](https://github.com/azure-rtos/threadx) and [NetXDuo](https://github.com/azure-rtos/netxduo) to connect to Azure IoT.
+This repository consist of SDK for Azure IoT services. SDK uses [ThreadX](https://github.com/azure-rtos/threadx) and [NetXDuo](https://github.com/azure-rtos/netxduo) to connect to Azure IoT.
 
 ## Documentation
 
-Documentation for this library can be found here: [Link](docs/azure_rtos_iot_sdk_api.md)
+library Documentation can be found here: [Link](docs/azure_rtos_iot_sdk_api.md)
 
 ## Key Features
 
@@ -19,8 +19,8 @@ Feature | Azure RTOS SDK for Azure IoT services  | Description
  [Receive cloud-to-device messages](https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-messages-c2d) | :heavy_check_mark: | Receive cloud-to-device messages and associated properties from IoT Hub.   
  [Device Twins](https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-device-twins) | :heavy_check_mark: | IoT Hub persists a device twin for each device that you connect to IoT Hub.  The device can perform operations like get twin document, subscribe to desired property updates.
  [Direct Methods](https://docs.microsoft.com/azure/iot-hub/iot-hub-devguide-direct-methods) | :heavy_check_mark: | IoT Hub gives you the ability to invoke direct methods on devices from the cloud.  
- [DPS - Device Provisioning Service](https://docs.microsoft.com/azure/iot-dps/) | :heavy_check_mark: | This SDK supports connecting your device to the Device Provisioning Service via, for example, [individual enrollment](https://docs.microsoft.com/azure/iot-dps/concepts-service#enrollment) using an [X.509 leaf certificate](https://docs.microsoft.com/azure/iot-dps/concepts-security#leaf-certificate).  
- Protocol | MQTT | The Azure RTOS SDK for Azure IoT services supports only MQTT.
+ [DPS - Device Provisioning Service](https://docs.microsoft.com/azure/iot-dps/) | :heavy_check_mark: | This SDK supports connecting for your device to the Device Provisioning Service via, for example, [individual enrollment](https://docs.microsoft.com/azure/iot-dps/concepts-service#enrollment) using an [X.509 leaf certificate](https://docs.microsoft.com/azure/iot-dps/concepts-security#leaf-certificate).  
+ Protocol | MQTT | Azure RTOS SDK for the Azure IoT services supports only MQTT.
  [IoT Plug and Play](https://docs.microsoft.com/azure/iot-pnp/overview-iot-plug-and-play) | :heavy_check_mark: | IoT Plug and Play Preview enables solution developers to integrate devices with their solutions without writing any embedded code. 
  [ASC for IoT](https://docs.microsoft.com/azure/asc-for-iot/) | :heavy_check_mark: | The Azure Security Center for IoT security module provides a comprehensive security solution for Azure RTOS devices. 
 
