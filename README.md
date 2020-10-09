@@ -1,5 +1,12 @@
 ![cortex_m4](https://github.com/azure-rtos/azure-iot-preview/workflows/cortex_m4/badge.svg)
 ![cortex_m7](https://github.com/azure-rtos/azure-iot-preview/workflows/cortex_m7/badge.svg)
+# Azure RTOS SDK for Azure IoT is now officially released 
+
+Azure RTOS SDK is now  part of [NetX Duo](https://github.com/azure-rtos/netxduo) version 6.1 or above.  azure_iot module is in NetX Duo addons under [azure_iot](https://github.com/azure-rtos/netxduo/tree/master/addons/azure_iot), and the nx_cloud module is in [addon/cloud](https://github.com/azure-rtos/netxduo/tree/master/addons/cloud). 
+
+**This repositiory is now archived, and is no longer maintained or monitored.**  
+
+---
 
 # Azure RTOS SDK for Azure IoT
 
